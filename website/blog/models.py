@@ -10,7 +10,7 @@ class Article(models.Model):
     id = models.AutoField(db_column='id', primary_key=True, verbose_name='自增主键')
     status = models.CharField(db_column='status', max_length=64, choices=ARTICLE_STATUS, default='draft',
                               verbose_name='帖子状态')
-    title = models.CharField(db_column='title', max_length=256, null=True, default=None, blank=True,
+    title = models.CharField(db_column='title', max_length=256, null=True, default='无标题', blank=True,
                              verbose_name='标题')
     content = models.TextField(db_column='content', default=None, null=True, blank=True, verbose_name='帖子内容')
     content_html = models.TextField(db_column='content_html', default=None, blank=True, null=True,
