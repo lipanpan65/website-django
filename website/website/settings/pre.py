@@ -15,14 +15,13 @@ DATABASES['default'] = {
     'ENGINE': 'django.db.backends.mysql',
     'NAME': 'doit',
     'USER': 'root',
-    'PASSWORD': 'lipanpan@65',
+    'PASSWORD': 'localhost',
     'HOST': '172.31.32.57',
     'PORT': '3306',
     'OPTIONS': {'charset': 'utf8mb4'},
 }
 
 REST_FRAMEWORK = {
-
     'DEFAULT_PERMISSION_CLASSES': ('framework.permission.UserRolePermission',),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
