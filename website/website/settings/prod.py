@@ -5,7 +5,7 @@
 # @File  : prod.py
 # @Desc :
 from .common import *
-
+from configparser import ConfigParser
 DEBUG = False
 ENV = "PROD"
 TEST_ENV = False
@@ -16,14 +16,21 @@ DEV_ENV = False
 ###################################################
 ALLOWED_HOSTS = ["*"]
 WSGI_APPLICATION = 'website.wsgi.prod.application'
+
+db_config = ConfigParser()
+db_ini = db_config.read("/opt/conf/db.ini")
+
+default_database = db_ini["default"]
+
 DATABASES['default'] = {
     'ENGINE': 'django.db.backends.mysql',
-    'NAME': 'website',
-    'USER': 'root',
+    'NAME': default_database['database'],
+    'USER': default_database['user'],
     # 'PASSWORD': '%aKyWJ9nesb2',
-    'PASSWORD': 'lipanpan#Web!wq10',
-    'HOST': 'localhost',
-    'PORT': '13380',
+    # 'PASSWORD': 'lipanpan#Web!wq10',
+    'PASSWORD': default_database['password'],
+    'HOST': default_database['host'],
+    'PORT': '3306',
     'OPTIONS': {'charset': 'utf8mb4'},
 }
 

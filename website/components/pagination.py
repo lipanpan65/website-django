@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2022/6/13 5:30 下午
-# @Author  : lipanpan65
+# @Author  : lipanpan
 # @Email  : 1299793997@qq.com
 # @File  : pagination.py
 # @Desc :

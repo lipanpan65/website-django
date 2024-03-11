@@ -14,9 +14,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.ArticleSerializer
     pagination_class = TablePageNumberPagination
 
-
     # def update(self, request, *args, **kwargs):
     #     print(request)
     #     # self.queryset.update_or_create()
     #     return super(ArticleViewSet, self).create(request, *args, **kwargs)
-
