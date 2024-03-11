@@ -7,6 +7,12 @@
 
 from .common import *
 
+log_path = os.path.join(BASE_DIR, 'logs')
+
+if not os.path.exists(log_path):
+    os.mkdir(log_path)
+
+print(log_path)
 # print(BASE_DIR)
 ###################################################
 # config env
