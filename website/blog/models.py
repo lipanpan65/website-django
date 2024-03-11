@@ -23,4 +23,4 @@ class Article(models.Model):
     update_time = models.DateTimeField(auto_now=True, verbose_name="修改时间")
 
     class Meta:
-        db_table = 'tbl_blog_article'
+        db_table = 'tb_blog_article'
