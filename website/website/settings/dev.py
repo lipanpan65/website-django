@@ -23,7 +23,7 @@ DATABASES['default'] = {
     'NAME': 'website',
     'USER': 'root',
     'PASSWORD': '%aKyWJ9nesb2',
-    'HOST': 'localhost',
+    'HOST': '127.0.0.1',
     'PORT': '13380',
     'OPTIONS': {'charset': 'utf8mb4'},
 }
