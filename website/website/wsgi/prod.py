@@ -12,6 +12,5 @@ import os
 from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'website.settings.prod')
-# 动态设置环境变量
 
 application = get_wsgi_application()
