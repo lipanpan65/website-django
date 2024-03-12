@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2022/6/13 5:37 下午
-# @Author  : lipanpan65
+# @Author  : lipanpan
 # @Email  : 1299793997@qq.com
 # @File  : dev.py
 # @Desc :
@@ -12,7 +12,6 @@ log_path = os.path.join(BASE_DIR, 'logs')
 if not os.path.exists(log_path):
     os.mkdir(log_path)
 
-print(log_path)
 # print(BASE_DIR)
 ###################################################
 # config env
