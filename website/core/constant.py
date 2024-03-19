@@ -9,3 +9,6 @@ class YnEnum(enum.Enum):
 class DateTimeFormatEnum(enum.Enum):
     DATETIME = "%Y-%m-%d %H:%M:%S"
     DATE = "%Y-%m-%d"
+
+
+

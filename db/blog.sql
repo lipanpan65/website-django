@@ -1,4 +1,4 @@
-CREATE TABLE `tbl_blog_article`
+CREATE TABLE `tb_blog_article`
 (
     `id`           int(11)      NOT NULL AUTO_INCREMENT COMMENT '自增主键',
     `status`       varchar(64)  NOT NULL DEFAULT 'draft' COMMENT '帖子状态：draft:草稿,publish:已发布',
@@ -16,3 +16,5 @@ CREATE TABLE `tbl_blog_article`
 
 
 -- 修改表结构
+
+
