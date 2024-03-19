@@ -18,7 +18,9 @@ from collections import OrderedDict
 
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from components.response import Result
+
+
+# from components.response import Result
 
 
 class TablePageNumberPagination(PageNumberPagination):
@@ -32,7 +34,6 @@ class TablePageNumberPagination(PageNumberPagination):
             }),
             ('data', data)
         ]))
-
 
     # def get_paginated_response(self, data):
     #     return Result.success(data=OrderedDict([
