@@ -1,12 +1,18 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2022/6/13 5:37 下午
-# @Author  : lipanpan65
+# @Author  : lipanpan
 # @Email  : 1299793997@qq.com
 # @File  : dev.py
 # @Desc :
 
 from .common import *
 
+log_path = os.path.join(BASE_DIR, 'logs')
+
+if not os.path.exists(log_path):
+    os.mkdir(log_path)
+
+# print(BASE_DIR)
 ###################################################
 # config env
 ###################################################
@@ -28,8 +34,6 @@ DATABASES['default'] = {
     'OPTIONS': {'charset': 'utf8mb4'},
 }
 
-from rest_framework.authentication import TokenAuthentication
-
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.AllowAny',),  # 任何人
     # 'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),  # 必须通过认证
@@ -47,9 +51,9 @@ REST_FRAMEWORK = {
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
     ),
-    # 'DEFAULT_PAGINATION_CLASS': 'components.pagination.TablePageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'components.pagination.SizeTablePageNumberPagination',
     # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 5,
+    'PAGE_SIZE': 10,
 }
 
 LOGGING = {

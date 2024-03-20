@@ -1,0 +1,3 @@
+class UserRolePermission(object):
+    pass
+
