@@ -57,12 +57,17 @@ class BaseResult(dict):
 
     def success(self, message='操作成功', data=None):
         self.update(message=message, data=data)
+        return self
 
     def failure(self, message='操作失败', data=None):
         self.update(success=False, message=message, data=data)
+        return self
 
     @property
     def ok(self): return self.get('success')
 
     @property
     def data(self): return self.get('data')
+
+
+Result = BaseResult()

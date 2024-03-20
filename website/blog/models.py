@@ -2,7 +2,7 @@ from django.db import models
 from components.base_models import BaseModel
 
 
-class Article(models.Model):
+class Article(BaseModel):
     ARTICLE_STATUS = (
         ('draft', u'草稿'),
         ('publish', u'已发布')
@@ -20,19 +20,20 @@ class Article(models.Model):
                                    verbose_name='添加人')
     update_user = models.CharField(db_column='update_user', max_length=256, null=True, default=None,
                                    verbose_name='修改人')
-    create_time = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
-    update_time = models.DateTimeField(auto_now=True, verbose_name="修改时间")
+
+    # create_time = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    # update_time = models.DateTimeField(auto_now=True, verbose_name="修改时间")
 
     class Meta:
         db_table = 'tb_blog_article'
 
 
-# class ArticleCategory(BaseModel):
-#     id = models.AutoField(db_column='id', primary_key=True, help_text='自增主键')
-#     category_name = models.CharField(db_column='category_name', max_length=256, help_text='分类名称')
-#     create_user = models.CharField(db_column='create_user', max_length=256, null=True, default=None, help_text='添加人')
-#     update_user = models.CharField(db_column='update_user', max_length=256, null=True, default=None, help_text='修改人')
-#     yn = models.SmallIntegerField(default=1, help_text='数据是否有效')
-#
-#     class Meta:
-#         db_table = 'tb_article_category'
+class ArticleCategory(BaseModel):
+    id = models.AutoField(db_column='id', primary_key=True, help_text='自增主键')
+    category_name = models.CharField(db_column='category_name', max_length=256, help_text='分类名称')
+    create_user = models.CharField(db_column='create_user', max_length=256, null=True, default=None, help_text='添加人')
+    update_user = models.CharField(db_column='update_user', max_length=256, null=True, default=None, help_text='修改人')
+    yn = models.SmallIntegerField(default=1, help_text='数据是否有效')
+
+    class Meta:
+        db_table = 'tb_article_category'

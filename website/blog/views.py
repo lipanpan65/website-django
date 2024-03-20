@@ -25,4 +25,5 @@ class ArticleViewSet(viewsets.ModelViewSet):
 
     # def list(self, request, *args, **kwargs):
     #     # raise BizException(ResultEnum.FAILURE)
+    #     raise ValueError('this is test')
     #     return super(ArticleViewSet, self).list(request)
