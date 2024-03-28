@@ -64,10 +64,17 @@ class BaseResult(dict):
         return self
 
     @property
+    def message(self): return self.get('message')
+
+    @property
     def ok(self): return self.get('success')
 
     @property
     def data(self): return self.get('data')
 
 
-Result = BaseResult()
+class BizResult(BaseResult):
+    pass
+
+
+BizResult = BizResult()

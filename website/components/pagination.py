@@ -17,7 +17,7 @@
 from collections import OrderedDict
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from components.response import Result
+from components.response import BizResult
 
 
 class TablePageNumberPagination(PageNumberPagination):
@@ -41,7 +41,7 @@ class TablePageNumberPagination(PageNumberPagination):
             }),
             ('data', data)
         ])
-        return Response(data=Result.success(data=page_data))
+        return Response(data=BizResult.success(data=page_data))
 
 
 class SizeTablePageNumberPagination(TablePageNumberPagination):
