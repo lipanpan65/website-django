@@ -44,7 +44,8 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
+        # 'rest_framework.renderers.JSONRenderer',
+        'components.renderers.JSONRenderer',
     ),
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
@@ -54,6 +55,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'components.pagination.SizeTablePageNumberPagination',
     # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
+    'EXCEPTION_HANDLER': 'components.exceptions.exception_handler'
 }
 
 LOGGING = {

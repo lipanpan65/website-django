@@ -24,7 +24,7 @@ user_routers_v1 = DefaultRouter()
 # #################### 用户路由配置 ####################### #
 
 user_routers_v1.register(r'article', blog_views.ArticleViewSet, 'article')
-
+user_routers_v1.register(r'article_category', blog_views.ArticleCategoryViewSet, 'article-category')
 urlpatterns = [
     # path('admin/', admin.site.urls),
     # re_path(r'^api/user/v1/', include(user_routers_v1.urls, namespace='user_v1')),
