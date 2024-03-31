@@ -4,13 +4,10 @@ from rest_framework import status
 from blog import models
 from blog import serializers
 from components.pagination import TablePageNumberPagination, SizeTablePageNumberPagination
-from components.response import ResultEnum
+from components.response import ResultEnum, ApiResult
 
 
 # from components.exceptions import BizException
-
-
-# from website.blog import
 
 
 class ArticleViewSet(viewsets.ModelViewSet):
@@ -27,3 +24,16 @@ class ArticleViewSet(viewsets.ModelViewSet):
     #     # raise BizException(ResultEnum.FAILURE)
     #     raise ValueError('this is test')
     #     return super(ArticleViewSet, self).list(request)
+
+    def publish(self, request, *args, **kwargs):
+        """
+        发布文章
+        """
+        pass
+        return ApiResult.success()
+
+
+class ArticleCategoryViewSet(viewsets.ModelViewSet):
+    queryset = models.ArticleCategory.objects.all().order_by('-create_time')
+    serializer_class = serializers.ArticleCategorySerializer
+    pagination_class = SizeTablePageNumberPagination

@@ -21,7 +21,6 @@ WSGI_APPLICATION = 'website.wsgi.prod.application'
 db_config = ConfigParser()
 db_config.read("/opt/conf/db.ini")
 
-
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.AllowAny',),  # 任何人
     # 'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),  # 必须通过认证
@@ -32,13 +31,15 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
+        # 'rest_framework.renderers.JSONRenderer',
+        'components.renderers.JSONRenderer',
     ),
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
     ),
+    'DEFAULT_PAGINATION_CLASS': 'components.pagination.SizeTablePageNumberPagination',
     # 'DEFAULT_PAGINATION_CLASS': 'components.pagination.TablePageNumberPagination',
     # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 5,

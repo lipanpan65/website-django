@@ -17,13 +17,39 @@
 from collections import OrderedDict
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from components.response import BizResult
+from components.response import BizResult, ResultEnum
 
 
 class TablePageNumberPagination(PageNumberPagination):
 
+    def get_paginated_response(self, data):
+        return Response(OrderedDict([
+            ('page', {
+                'total': self.page.paginator.count,
+                'current': self.page.number,
+                'pageSize': self.page.paginator.per_page,
+            }),
+            ('data', data)
+        ]))
+
     # def get_paginated_response(self, data):
-    #     return Response(OrderedDict([
+    #     return Response(
+    #         BizResult.success(result_enum=ResultEnum.success, data=OrderedDict([
+    #             ('page', {
+    #                 'total': self.page.paginator.count,
+    #                 'current': self.page.number,
+    #                 'pageSize': self.page.paginator.per_page,
+    #             }),
+    #             ('data', data)
+    #         ]))
+    #     )
+
+
+class SizeTablePageNumberPagination(TablePageNumberPagination):
+    page_size_query_param = 'page_size'
+
+    # def get_paginated_response(self, data):
+    #     data = BizResult.success(result_enum=ResultEnum.success, data=OrderedDict([
     #         ('page', {
     #             'total': self.page.paginator.count,
     #             'current': self.page.number,
@@ -31,30 +57,16 @@ class TablePageNumberPagination(PageNumberPagination):
     #         }),
     #         ('data', data)
     #     ]))
+    #     print('data', data)
+    #     return Response(data=data)
 
-    def get_paginated_response(self, data):
-        page_data = OrderedDict([
-            ('page', {
-                'total': self.page.paginator.count,
-                'current': self.page.number,
-                'pageSize': self.page.paginator.per_page,
-            }),
-            ('data', data)
-        ])
-        return Response(data=BizResult.success(data=page_data))
-
-
-class SizeTablePageNumberPagination(TablePageNumberPagination):
-    page_size_query_param = 'page_size'
-
-    # def get_paginated_response(self, data):
-    #     page_data = OrderedDict([
-    #         ('page', {
-    #             'total': self.page.paginator.count,
-    #             'current': self.page.number,
-    #             'pageSize': self.page.paginator.per_page,
-    #         }),
-    #         ('data', data)
-    #     ])
-    #
-    #     return Response(data=Result.success(data=page_data))
+        # page_data = OrderedDict([
+        #     ('page', {
+        #         'total': self.page.paginator.count,
+        #         'current': self.page.number,
+        #         'pageSize': self.page.paginator.per_page,
+        #     }),
+        #     ('data', data)
+        # ])
+        #
+        # return Response(data=Result.success(data=page_data))
