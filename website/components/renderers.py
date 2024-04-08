@@ -25,7 +25,8 @@ class JSONRenderer(OriginJSONRenderer):
     def render(self, data, accepted_media_type=None, renderer_context=None):
         if renderer_context and renderer_context.get('response'):
             response = renderer_context.get('response')
-            if response.status_code in [status.HTTP_200_OK, status.HTTP_201_CREATED]:
+            if response.status_code in [status.HTTP_200_OK, status.HTTP_201_CREATED, status.HTTP_204_NO_CONTENT]:
+                response.status_code = status.HTTP_200_OK
                 if isinstance(data, dict):
                     if 'success' in data.keys() or 'code' in data.keys():
                         return super().render(data, accepted_media_type, renderer_context)
