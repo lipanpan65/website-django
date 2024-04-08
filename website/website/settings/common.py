@@ -127,6 +127,12 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # 日志相关配置
+
+LOG_PATH = os.path.join(BASE_DIR, 'logs')
+if not os.path.exists(LOG_PATH):
+    os.mkdir(LOG_PATH)
+
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -136,7 +142,19 @@ LOGGING = {
             'format': '[%(asctime)s] [%(filename)s:%(lineno)d] [%(module)s:%(funcName)s] '
                       '[%(levelname)s]- %(message)s'},
         'simple': {  # 简单格式
-            'format': '%(levelname)s %(message)s'
+            'format': '[%(name)s] [%(levelname)s] %(message)s'
+        },
+        # 3[7mSuixinBlog: https://suixinblog.cn3[0m
+        # \033[0;36m abc \033[0m
+        'console': {
+            'format': '[%(asctime)s] [%(name)s] [%(levelname)s] [%(filename)s:%(module)s:%(funcName)s:%(lineno)d] [%(processName)s:%(process)d] [%(threadName)s:%(thread)d] \033[1;36m %(message)s \033[0m'
+        },
+        # \033[0;37;42m\tHello World\033[0m
+        # \033[0;37;40m
+        # \033[0;36m
+        # %(module)s %(funcName)s
+        'db.backends': {
+            'format': '\033[1;33m[%(name)s] [%(levelname)s] [%(processName)s:%(process)d] [%(threadName)s:%(thread)d]\n %(message)s \033[0m\n'
         },
     },
     # 过滤
@@ -148,7 +166,7 @@ LOGGING = {
         'default': {
             'level': 'INFO',
             'class': 'logging.handlers.TimedRotatingFileHandler',
-            'filename': os.path.join(log_path, 'all-{}.log'.format(time.strftime('%Y-%m-%d'))),
+            'filename': os.path.join(LOG_PATH, 'all-{}.log'.format(time.strftime('%Y-%m-%d'))),
             'when': 'midnight',
             'backupCount': 366,  # 备份数
             'formatter': 'standard',  # 输出格式
@@ -157,7 +175,7 @@ LOGGING = {
         'django.request': {
             'level': 'INFO',
             'class': 'logging.handlers.TimedRotatingFileHandler',
-            'filename': os.path.join(log_path, 'django_request-{}.log'.format(time.strftime('%Y-%m-%d'))),
+            'filename': os.path.join(LOG_PATH, 'django-request-{}.log'.format(time.strftime('%Y-%m-%d'))),
             'when': 'midnight',
             'backupCount': 366,  # 备份数
             'formatter': 'standard',  # 输出格式
@@ -167,7 +185,7 @@ LOGGING = {
         'error': {
             'level': 'ERROR',
             'class': 'logging.handlers.TimedRotatingFileHandler',
-            'filename': os.path.join(log_path, 'error-{}.log'.format(time.strftime('%Y-%m-%d'))),
+            'filename': os.path.join(LOG_PATH, 'error-{}.log'.format(time.strftime('%Y-%m-%d'))),
             'when': 'midnight',
             'backupCount': 366,  # 备份数
             'formatter': 'standard',  # 输出格式
@@ -177,16 +195,22 @@ LOGGING = {
         'console': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
-            'formatter': 'standard'
+            'formatter': 'console',  # 输出格式
+            # 'formatter': 'standard' if DEBUG else 'standard',  # 输出格式
         },
-        # 输出info日志
-        'info': {
+        'django.db.backends': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'db.backends',  # 输出格式
+        },
+        # 输出 access 日志 具体业务日志
+        'access': {
             'level': 'INFO',
             'class': 'logging.handlers.TimedRotatingFileHandler',
-            'filename': os.path.join(log_path, 'info-{}.log'.format(time.strftime('%Y-%m-%d'))),
+            'filename': os.path.join(LOG_PATH, 'access-{}.log'.format(time.strftime('%Y-%m-%d'))),
             'when': 'midnight',
             'backupCount': 366,  # 备份数
-            'formatter': 'standard',
+            'formatter': 'standard',  # 输出格式
             'encoding': 'utf-8',  # 设置默认编码
         },
     },
@@ -194,20 +218,34 @@ LOGGING = {
     'loggers': {
         'django.request': {
             'handlers': ['django.request'],
-            'level': 'INFO',
+            'level': 'INFO',  # 开发环境,测试环境都为 DEBUG
             'propagate': False
         },
-        # 类型 为 django 处理所有类型的日志， 默认调用
+        'django.db.backends': {
+            'handlers': ['django.db.backends'],
+            'propagate': False,
+            'level': 'DEBUG',
+        },
+        # 类型 为 django 处理所有类型的日志， 默认调用 相当于 root
         'django': {
-            'handlers': ['default', 'console'],
-            'level': 'INFO',
+            # 'handlers': ['console', 'django.request'] if DEBUG else ['django.request'],
+            'handlers': ['django.request'] if DEBUG else ['django.request'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': True
+        },
+        'error': {
+            'handlers': ['console', 'error'] if DEBUG else ['error'],
+            'level': 'DEBUG' if DEBUG else 'ERROR',
             'propagate': False
         },
-        # log 调用时需要当作参数传入
-        'log': {
-            'handlers': ['error', 'info', 'console', 'default'],
-            'level': 'INFO',
-            'propagate': True
+        'access': {
+            'handlers': ['console', 'access'] if DEBUG else ['access'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False
+        },
+        'root': {
+            'handlers': ['console', 'default'] if DEBUG else ['default'],
+            'level': 'INFO'
         }
     }
 }
