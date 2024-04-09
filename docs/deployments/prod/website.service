@@ -1,0 +1,18 @@
+[Unit]
+Description=Website uWsgi Server
+Documentation=http://www.lipanpan.com
+After=network.target
+
+[Service]
+# User=root
+# Group=root
+# PIDFile=/run/website/website-master.pid
+WorkingDirectory=/opt/website-django/website/website
+ExecStart=/opt/website-django/website/venv/bin/uwsgi --ini /opt/website-django/website/website/uwsgi/prod.ini
+ExecReload=/opt/website-django/website/venv/bin/uwsgi --reload /run/website/website-master.pid
+ExecStop=/opt/website-django/website/venv/bin/uwsgi --stop /run/website/website-master.pid
+Restart=on-failure
+RestartSec=3s
+
+[Install]
+WantedBy=multi-user.target
