@@ -121,13 +121,10 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# 日志相关配置
-
+###################################################
+# 日志的配置
+###################################################
 LOG_PATH = os.path.join(BASE_DIR, 'logs')
-
-if not DEBUG:
-  LOG_PATH = '/var/log/website' 
-  
 if not os.path.exists(LOG_PATH):
     os.mkdir(LOG_PATH)
 
