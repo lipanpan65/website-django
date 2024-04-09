@@ -12,6 +12,11 @@ ENV = "PROD"
 TEST_ENV = False
 DEV_ENV = False
 
+LOG_PATH = '/var/log/website'
+
+if not os.path.exists(LOG_PATH):
+    os.mkdir(LOG_PATH)
+
 ###################################################
 # config env
 ###################################################

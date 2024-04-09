@@ -18,11 +18,6 @@ from pathlib import Path
 # 新增 parent
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-log_path = os.path.join(BASE_DIR, 'logs')
-
-if not os.path.exists(log_path):
-    os.mkdir(log_path)
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
@@ -129,9 +124,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # 日志相关配置
 
 LOG_PATH = os.path.join(BASE_DIR, 'logs')
+
+if not DEBUG:
+  LOG_PATH = '/var/log/website' 
+  
 if not os.path.exists(LOG_PATH):
     os.mkdir(LOG_PATH)
-
 
 LOGGING = {
     'version': 1,
