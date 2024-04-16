@@ -110,7 +110,6 @@ LANGUAGE_CODE = 'zh-hans'
 TIME_ZONE = 'Asia/Shanghai'
 
 USE_I18N = True
-
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
@@ -246,3 +245,6 @@ LOGGING = {
         }
     }
 }
+
+# 用户的配置
+AUTH_USER_MODEL = 'users.UserInfo'
