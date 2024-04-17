@@ -247,4 +247,4 @@ LOGGING = {
 }
 
 # 用户的配置
-AUTH_USER_MODEL = 'users.UserInfo'
+# AUTH_USER_MODEL = 'users.UserInfo'

@@ -33,7 +33,8 @@ class ArticleViewSet(viewsets.ModelViewSet):
         """
         发布文章
         """
-        instance = self.get_object()
+        # summary = request.data.get('summary')
+        # instance = self.get_object()
 
         return ApiResult.success()
 

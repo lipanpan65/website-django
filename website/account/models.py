@@ -1,14 +1,15 @@
 from django.db import models
 from components.base_models import BaseModel
 
+
 class UserInfo(BaseModel):
     id = models.AutoField(primary_key=True, help_text="自增主键")
     username = models.CharField(max_length=50, unique=True, help_text="用户名")
     name = models.CharField(max_length=50, null=True, default=None, help_text="姓名")
     email = models.CharField(max_length=50, null=True, default=None, help_text="邮箱")
     phone = models.CharField(max_length=50, null=True, default=None, help_text="联系电话")
-    status = models.IntegerField(choices=STATUS, default=STATUS_ENABLE, help_text="状态：1为在用，0为禁用")
-    role = models.ForeignKey(to=Role, db_column='role_id', on_delete=models.CASCADE)
+    # status = models.IntegerField(choices=STATUS, default=STATUS_ENABLE, help_text="状态：1为在用，0为禁用")
+    # role = models.ForeignKey(to=Role, db_column='role_id', on_delete=models.CASCADE)
     orgs = models.CharField(max_length=500, null=True, default=None, help_text="组织架构")
     note = models.CharField(max_length=2000, blank=True, null=True, default=None, help_text="备注")
     create_user = models.CharField(max_length=100, null=True, default="lipanpan65", help_text="创建人")
@@ -59,7 +60,6 @@ class UserInfo(BaseModel):
         return self.username
 
 
-
 class Menus(BaseModel):
     STATUS_DISABLE = 0
     STATUS_ENABLE = 1
@@ -82,37 +82,35 @@ class Menus(BaseModel):
     pid = models.ForeignKey("self", db_column='pid', on_delete=models.CASCADE, null=True, default=None,
                             help_text="主键自增")
 
+# class User2Role(models.Model):
+#     id = models.AutoField(primary_key=True, help_text="自增主键")
+#     user = models.ForeignKey(to=UserInfo, db_column='user_id', on_delete=models.CASCADE)
+#     role = models.ForeignKey(to=Role, db_column='role_id', on_delete=models.CASCADE)
+#
+#     class Meta:
+#         db_table = "dbms_user2role"
 
 
-class User2Role(models.Model):
-    id = models.AutoField(primary_key=True, help_text="自增主键")
-    user = models.ForeignKey(to=UserInfo, db_column='user_id', on_delete=models.CASCADE)
-    role = models.ForeignKey(to=Role, db_column='role_id', on_delete=models.CASCADE)
+# class UserGroup(models.Model):
+#     id = models.AutoField(primary_key=True, help_text="自增主键")
+#     name = models.CharField(max_length=128, help_text='角色名称')
+#     create_time = models.DateTimeField(auto_now=True, help_text="创建时间")
+#     create_user = models.CharField(max_length=100, null=True, help_text="创建人")
+#     update_time = models.DateTimeField(auto_now=True, help_text="更新时间")
+#     update_user = models.CharField(max_length=100, null=True, help_text="更新人")
+#     note = models.CharField(max_length=2000, blank=True, null=True, help_text="备注")
+#     users = models.ManyToManyField(UserInfo,
+#                                    through='User2Group',
+#                                    through_fields=('group', 'user',),
+#                                    blank=True,
+#                                    related_name='user_group', )
 
-    class Meta:
-        db_table = "dbms_user2role"
+# models.ManyToManyRel
+# class Meta:
+#     db_table = "dbms_user_group"
 
-
-class UserGroup(models.Model):
-    id = models.AutoField(primary_key=True, help_text="自增主键")
-    name = models.CharField(max_length=128, help_text='角色名称')
-    create_time = models.DateTimeField(auto_now=True, help_text="创建时间")
-    create_user = models.CharField(max_length=100, null=True, help_text="创建人")
-    update_time = models.DateTimeField(auto_now=True, help_text="更新时间")
-    update_user = models.CharField(max_length=100, null=True, help_text="更新人")
-    note = models.CharField(max_length=2000, blank=True, null=True, help_text="备注")
-    users = models.ManyToManyField(UserInfo,
-                                   through='User2Group',
-                                   through_fields=('group', 'user',),
-                                   blank=True,
-                                   related_name='user_group', )
-
-    # models.ManyToManyRel
-    class Meta:
-        db_table = "dbms_user_group"
-
-    def add_user(self, username, *args, **kwargs):
-        # username = kwargs.get("username")
-        exists, user = UserInfo.get_user(username=username)
-        if exists:
-            User2Group.objects.create(user=user.first(), group=self)
+# def add_user(self, username, *args, **kwargs):
+# username = kwargs.get("username")
+# exists, user = UserInfo.get_user(username=username)
+# if exists:
+#     User2Group.objects.create(user=user.first(), group=self)
