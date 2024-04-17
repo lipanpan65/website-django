@@ -1,7 +1,8 @@
 import logging
 from rest_framework import viewsets
-from rest_framework import status
+from rest_framework import status, filters
 from rest_framework.decorators import action
+from django_filters.rest_framework import DjangoFilterBackend
 from blog import models
 from blog import serializers
 from components.pagination import TablePageNumberPagination, SizeTablePageNumberPagination
@@ -17,6 +18,9 @@ class ArticleViewSet(viewsets.ModelViewSet):
     queryset = models.Article.objects.all().order_by('-create_time')
     serializer_class = serializers.ArticleSerializer
     pagination_class = SizeTablePageNumberPagination
+    filter_backends = (filters.SearchFilter, DjangoFilterBackend, filters.OrderingFilter)
+    # filterset_fields = ('group', 'level', 'time_type', 'yn')
+    filterset_fields = ('status',)
 
     # def update(self, request, *args, **kwargs):
     #     print(request)
@@ -28,14 +32,19 @@ class ArticleViewSet(viewsets.ModelViewSet):
     #     raise ValueError('this is test')
     #     return super(ArticleViewSet, self).list(request)
 
-    @action(methods=['POST'], detail=False)
+    @action(methods=['POST'], detail=True)
     def publish(self, request, *args, **kwargs):
         """
         发布文章
         """
-        # summary = request.data.get('summary')
-        # instance = self.get_object()
-
+        category_id = request.data.get('category_id')
+        category = models.ArticleCategory.objects.get(id=category_id)
+        instance = self.get_object()
+        instance.category_id = category
+        instance.category_name = category.category_name
+        instance.status = 'publish'
+        instance.save(force_update=['category_id', 'category_name', 'status'])
+        logger.info("instance===>%s" % instance)
         return ApiResult.success()
 
 
