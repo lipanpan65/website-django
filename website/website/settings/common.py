@@ -18,11 +18,6 @@ from pathlib import Path
 # 新增 parent
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-log_path = os.path.join(BASE_DIR, 'logs')
-
-if not os.path.exists(log_path):
-    os.mkdir(log_path)
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
@@ -44,6 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'django_filters',
+    'account',
     'blog',
 ]
 
@@ -108,12 +105,12 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
+# LANGUAGE_CODE = 'en-us'
+# TIME_ZONE = 'UTC'
+LANGUAGE_CODE = 'zh-hans'
+TIME_ZONE = 'Asia/Shanghai'
 
 USE_I18N = True
-
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
@@ -126,12 +123,12 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# 日志相关配置
-
+###################################################
+# 日志的配置
+###################################################
 LOG_PATH = os.path.join(BASE_DIR, 'logs')
 if not os.path.exists(LOG_PATH):
     os.mkdir(LOG_PATH)
-
 
 LOGGING = {
     'version': 1,
@@ -249,3 +246,6 @@ LOGGING = {
         }
     }
 }
+
+# 用户的配置
+# AUTH_USER_MODEL = 'users.UserInfo'
