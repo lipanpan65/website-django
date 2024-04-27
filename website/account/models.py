@@ -70,17 +70,22 @@ class Menus(BaseModel):
     )
 
     id = models.AutoField(primary_key=True, help_text="自增主键")
-    name = models.CharField(max_length=128, help_text='菜单名称')
+    menu_name = models.CharField(max_length=64, help_text='菜单名称')
+    enable = models.SmallIntegerField(default=1, help_text='状态：1:启用，0:禁用')
     url = models.CharField(max_length=255, help_text='URL')
+    icon = models.CharField(max_length=255, default='', help_text='菜单图标')
     menu_type = models.IntegerField(default=1, help_text='菜单1,按钮2,目录0')
-    icon = models.CharField(max_length=255, help_text='菜单图标')
-    status = models.IntegerField(choices=STATUS, default=STATUS_ENABLE, help_text="状态：1为在用，0为禁用")
     element = models.CharField(max_length=255, null=True, help_text='组件名称')
-    hidden = models.IntegerField(default=1, help_text='1:显示,0:隐藏')
-    linked = models.IntegerField(default=0, help_text='1外链,0非外链')
-    note = models.CharField(max_length=200, default=None, help_text='备注')
+    # status = models.IntegerField(choices=STATUS, default=STATUS_ENABLE, help_text="状态：1为在用，0为禁用")
+    # hidden = models.IntegerField(default=1, help_text='1:显示,0:隐藏')
+    # linked = models.IntegerField(default=0, help_text='1外链,0非外链')
     pid = models.ForeignKey("self", db_column='pid', on_delete=models.CASCADE, null=True, default=None,
                             help_text="主键自增")
+    remark = models.CharField(max_length=255, default=None, help_text='备注')
+    yn = models.SmallIntegerField(default=1, help_text='是否有效:1有效,0无效')
+
+    class Meta:
+        db_table = "dbms_menus"
 
 # class User2Role(models.Model):
 #     id = models.AutoField(primary_key=True, help_text="自增主键")

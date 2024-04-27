@@ -18,15 +18,22 @@ from django.urls import re_path, include
 from rest_framework.routers import DefaultRouter
 
 from blog import views as blog_views
+from account import views as account_views
 
 user_routers_v1 = DefaultRouter()
+
+account_routers_v1 = DefaultRouter()
 
 # #################### 用户路由配置 ####################### #
 
 user_routers_v1.register(r'article', blog_views.ArticleViewSet, 'article')
 user_routers_v1.register(r'article_category', blog_views.ArticleCategoryViewSet, 'article-category')
+
+account_routers_v1.register(r'menus', account_views.MenuViewSet, basename='menus')
+
 urlpatterns = [
     # path('admin/', admin.site.urls),
     # re_path(r'^api/user/v1/', include(user_routers_v1.urls, namespace='user_v1')),
     re_path(r'^api/user/v1/', include(user_routers_v1.urls)),
+    re_path(r'^api/user/v1/account/', include(account_routers_v1.urls)),
 ]
