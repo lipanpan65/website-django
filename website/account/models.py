@@ -87,7 +87,58 @@ class Menus(BaseModel):
     class Meta:
         db_table = "dbms_menus"
 
-# class User2Role(models.Model):
+    def to_dict(self):
+        """
+        将 object 转为 dict
+        """
+        obj_dict = self.__dict__
+        return {key: value for key, value in obj_dict.items() if not key.startswith('_')}
+
+    @property
+    def parent(self):
+        return Menus.objects.filter(id=self.pid).first()
+
+    @property
+    def branches(self):
+        """
+        返回当前节点到跟节点的全部节点
+        """
+        sub_branches = [self]
+        while True:
+            # 获取最后一个节点
+            parent = sub_branches[-1].parent
+            if not parent:
+                break
+            sub_branches.append(parent)
+        # 倒叙
+        return sub_branches[::-1]
+
+    @classmethod
+    def parents(cls):
+        """
+        获取全量的父级菜单
+        """
+        return cls.objects.filter(pid__isnull=True)
+
+    @property
+    def children(self):
+        """ 获取当前菜单的全部子菜单 """
+        queryset = Menus.objects.filter(pid=self.id).all()
+        return queryset if queryset else []
+
+    def get_sub_children(self):
+        """
+        获取所有的子节点
+        """
+        children = self.children
+        sub_children = list(children)
+        if not sub_children:
+            return sub_children
+        for child in children:
+            sub_children.extend(child.get_sub_children())
+        return sub_children
+
+    # class User2Role(models.Model):
 #     id = models.AutoField(primary_key=True, help_text="自增主键")
 #     user = models.ForeignKey(to=UserInfo, db_column='user_id', on_delete=models.CASCADE)
 #     role = models.ForeignKey(to=Role, db_column='role_id', on_delete=models.CASCADE)

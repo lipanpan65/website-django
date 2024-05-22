@@ -17,3 +17,26 @@ class MenusSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Menus
         fields = '__all__'
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        # children = instance.get_sub_children()
+        children = instance.children
+        if children:
+            ret['children'] = MenusSerializer(children, many=True).data
+        return ret
+
+
+class MenusTreeSerializer(serializers.ModelSerializer):
+    children = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.Menus
+        fields = '__all__'
+
+    def get_children(self, instance):
+        # children = instance.get_sub_children()
+        children = instance.children
+        if children:
+            serializer = MenusSerializer(children, many=True)
+            return serializer.data
