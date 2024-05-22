@@ -37,6 +37,8 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PAGINATION_CLASS': 'framework.pagination.TablePageNumberPagination',
     'PAGE_SIZE': 10,
+    'DATETIME_FORMAT': "%Y-%m-%d %H:%M:%S",  # 例如：2022-04-07 15:30:00
+    'DATE_FORMAT': "%Y-%m-%d",  # 例如：2022-04-07
 }
 
 # LOGGING = {

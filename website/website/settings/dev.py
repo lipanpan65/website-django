@@ -55,7 +55,9 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'components.pagination.SizeTablePageNumberPagination',
     # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
-    'EXCEPTION_HANDLER': 'components.exceptions.exception_handler'
+    'EXCEPTION_HANDLER': 'components.exceptions.exception_handler',
+    'DATETIME_FORMAT': "%Y-%m-%d %H:%M:%S",  # 例如：2022-04-07 15:30:00
+    'DATE_FORMAT': "%Y-%m-%d",  # 例如：2022-04-07
 }
 
 # LOGGING = {
