@@ -55,6 +55,9 @@ class ArticleCategoryViewSet(viewsets.ModelViewSet):
     queryset = models.ArticleCategory.objects.all().order_by('-create_time')
     serializer_class = serializers.ArticleCategorySerializer
     pagination_class = SizeTablePageNumberPagination
+    filter_backends = (filters.SearchFilter, DjangoFilterBackend, filters.OrderingFilter)
+    # filter_fields = ('=title',)
+    search_fields = ('category_name',)
 
     @action(methods=['GET'], detail=False)
     def validate_category_name(self, request, *args, **kwargs):

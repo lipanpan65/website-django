@@ -52,10 +52,10 @@ class UserInfo(BaseModel):
     def is_active(self):
         return self.status
 
-    @property
-    def is_dba(self):
-        return self.role == self.ROLE_ADMIN
-
+    # @property
+    # def is_dba(self):
+    #     return self.role == self.ROLE_ADMIN
+    #
     def check_password(self, raw_password):
         return self.username
 
