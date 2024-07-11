@@ -42,6 +42,8 @@ REST_FRAMEWORK = {
     # 'DEFAULT_PAGINATION_CLASS': 'components.pagination.TablePageNumberPagination',
     # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 5,
+    'DATETIME_FORMAT': "%Y-%m-%d %H:%M:%S",  # 例如：2022-04-07 15:30:00
+    'DATE_FORMAT': "%Y-%m-%d",  # 例如：2022-04-07
 }
 
 DATABASES['default'] = {

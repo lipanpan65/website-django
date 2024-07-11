@@ -227,7 +227,8 @@ LOGGING = {
         'django': {
             # 'handlers': ['console', 'django.request'] if DEBUG else ['django.request'],
             'handlers': ['django.request'] if DEBUG else ['django.request'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
+            # 'level': 'DEBUG' if DEBUG else 'INFO',
+            'level': 'DEBUG',
             'propagate': True
         },
         'error': {
