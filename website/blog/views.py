@@ -41,12 +41,14 @@ class ArticleViewSet(viewsets.ModelViewSet):
         发布文章
         """
         category_id = request.data.get('category_id')
-        category = models.ArticleCategory.objects.get(id=category_id)
+        summary = request.data.get('summary')
         instance = self.get_object()
+        category = models.ArticleCategory.objects.get(id=category_id)
+        instance.summary = summary
         instance.category_id = category
         instance.category_name = category.category_name
         instance.status = 'publish'
-        instance.save(force_update=['category_id', 'category_name', 'status'])
+        instance.save(force_update=['category_id', 'category_name', 'status', 'summary'])
         logger.info("instance===>%s" % instance)
         return ApiResult.success()
 
