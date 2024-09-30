@@ -56,6 +56,7 @@ class UserInfo(BaseModel):
     # def is_dba(self):
     #     return self.role == self.ROLE_ADMIN
     #
+
     def check_password(self, raw_password):
         return self.username
 
