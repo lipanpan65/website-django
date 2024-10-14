@@ -171,3 +171,18 @@ class Menus(BaseModel):
 # exists, user = UserInfo.get_user(username=username)
 # if exists:
 #     User2Group.objects.create(user=user.first(), group=self)
+
+
+"""
+CREATE TABLE `dbms_user2role` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+  `user_id` int(11) NOT NULL COMMENT '用户ID',
+  `user_name` 
+  `role_id` int(11) NOT NULL COMMENT '角色ID',
+  `role_name` 
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_user_role` (`user_id`,`role_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='基础信息表-用户角色关联表';
+
+"""
+
