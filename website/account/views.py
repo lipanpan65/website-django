@@ -3,12 +3,48 @@ from django.shortcuts import render
 # Create your views here.
 import logging
 from rest_framework import viewsets
+from rest_framework import permissions
 from account import models
 from account import serializers
 from components.pagination import SizeTablePageNumberPagination
+
 from components.response import ResultEnum, ApiResult
 
 logger = logging.getLogger()
+
+
+class UserInfoViewSet(viewsets.ModelViewSet):
+    queryset = models.UserInfo.objects.all().order_by('-create_time')
+    serializer_class = serializers.UserInfoSerializer
+    pagination_class = SizeTablePageNumberPagination
+    permission_classes = [permissions.AllowAny]
+
+    # def create(self, request, *args, **kwargs):
+    #     serializer = self.get_serializer(data=request.data)
+    #     serializer.is_valid(raise_exception=True)
+    #     self.perform_create(serializer)
+    #     headers = self.get_success_headers(serializer.data)
+
+    def login(self, request, *args, **kwargs):
+        """
+        登录
+        """
+        pass
+
+    def register(self, request, *args, **kwargs):
+        """
+        注册
+        """
+        pass
+
+
+class RoleViewSet(viewsets.ModelViewSet):
+    queryset = models.Role.objects.all().order_by('-create_time')
+    # serializer_class = serializers.RoleSerializer
+    pagination_class = SizeTablePageNumberPagination
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
 
 
 class MenuViewSet(viewsets.ModelViewSet):

@@ -3,12 +3,14 @@ from components.base_models import BaseModel
 
 
 class UserInfo(BaseModel):
+    STATUS = ()
+    STATUS_ENABLE = ""
     id = models.AutoField(primary_key=True, help_text="自增主键")
     username = models.CharField(max_length=50, unique=True, help_text="用户名")
     name = models.CharField(max_length=50, null=True, default=None, help_text="姓名")
     email = models.CharField(max_length=50, null=True, default=None, help_text="邮箱")
     phone = models.CharField(max_length=50, null=True, default=None, help_text="联系电话")
-    # status = models.IntegerField(choices=STATUS, default=STATUS_ENABLE, help_text="状态：1为在用，0为禁用")
+    enable = models.IntegerField(choices=STATUS, default=STATUS_ENABLE, help_text="状态：1为在用，0为禁用")
     # role = models.ForeignKey(to=Role, db_column='role_id', on_delete=models.CASCADE)
     orgs = models.CharField(max_length=500, null=True, default=None, help_text="组织架构")
     note = models.CharField(max_length=2000, blank=True, null=True, default=None, help_text="备注")
@@ -50,7 +52,7 @@ class UserInfo(BaseModel):
 
     @property
     def is_active(self):
-        return self.status
+        return self.enable
 
     # @property
     # def is_dba(self):
@@ -59,6 +61,69 @@ class UserInfo(BaseModel):
 
     def check_password(self, raw_password):
         return self.username
+
+
+class Role(models.Model):
+    STATUS_DISABLE = 0
+    STATUS_ENABLE = 1
+
+    ROLE_RD = 0
+    ROLE_ADMIN = 1
+    ROLE_TYPE = (
+        (ROLE_RD, "普通用户"),
+        (ROLE_ADMIN, "管理员")
+    )
+
+    STATUS = (
+        (STATUS_ENABLE, "启用"),
+        (STATUS_DISABLE, "禁用")
+    )
+
+    id = models.AutoField(primary_key=True, help_text="自增主键")
+    name = models.CharField(max_length=128, help_text='角色名称')
+    # role_type = models.CharField(max_length=128, help_text='角色类型:user 普通用户 admin 管理员')
+    # role_key = models.CharField(max_length=128, help_text="角色唯一标识")
+    role_type = models.IntegerField(choices=ROLE_TYPE, default=1, null=True, help_text="管理员类型：管理员、开发管理员")
+    status = models.IntegerField(choices=STATUS, default=STATUS_ENABLE, help_text="状态：1为在用，0为禁用")
+    create_user = models.CharField(max_length=128, default=None, help_text='创建人')
+    update_user = models.CharField(max_length=128, default=None, help_text='修改人')
+    create_time = models.DateTimeField(auto_now_add=True, help_text='创建时间')
+    update_time = models.DateTimeField(auto_now=True, help_text='修改时间')
+    note = models.CharField(max_length=200, default=None, help_text='备注')
+
+    # users = models.ManyToManyField(UserInfo, through='User2Role', through_fields=('user', 'role'), blank=True,
+    #                                related_name='role_user')
+    class Meta:
+        db_table = "dbms_user_role"
+
+
+# class RoleViewSet(viewsets.ModelViewSet):
+#     queryset = Role.objects.all()
+#     serializer_class = RoleSerializer
+#
+#     def create(self, request, *args, **kwargs):
+#         username = request.user.username
+#         request.data.update(dict(create_user=username, update_user=username))
+#         return super().create(request, *args, **kwargs)
+#
+#     @action(methods=["GET"], detail=False)
+#     def validate_name(self, request, *args, **kwargs):
+#         """
+#         校验名称是否存在,并且唯一
+#         创建的时候 数据不存在 且 count 为 0
+#         更新 数据存在 且 count 为 1
+#         """
+#         data = dict(exists=True, code=0)
+#         id = self.request.query_params.get("id", 0)
+#         name = self.request.query_params.get("name")
+#         queryset = self.queryset.filter(name=name)
+#         exists, count = queryset.exists(), queryset.count()
+#         if not exists:  # 如果不存在,则校验直接通过 对应创建操作
+#             data = dict(exists=exists, code=0)
+#         else:  # 如果存在,则判断是否操作的为同一对象,如果是 则直接通过校验
+#             if int(id) == queryset.first().id:
+#                 data = dict(exists=False, code=0)
+#         return Response(status=status.HTTP_200_OK, data=data)
 
 
 class Menus(BaseModel):

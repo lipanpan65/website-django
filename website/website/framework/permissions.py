@@ -1,4 +1,6 @@
+import re
 from rest_framework.permissions import BasePermission
+
 
 class UserRolePermission(BasePermission):
     PATTERN_LOGIN_API = re.compile(r'^/api/operation/configure/user/login/')
@@ -10,8 +12,8 @@ class UserRolePermission(BasePermission):
     PATTERN_WEIXIN = re.compile(r'^/api/weixin/')
 
     def has_permission(self, request, view):
-    """
-    Return `True` if permission is granted, `False` otherwise.
-    """
-    return True
-
+        """
+        Return `True` if permission is granted, `False` otherwise.
+        """
+        print(request.user)
+        return True
