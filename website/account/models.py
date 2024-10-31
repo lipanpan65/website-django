@@ -13,7 +13,7 @@ class UserInfo(BaseModel):
     enable = models.IntegerField(choices=STATUS, default=STATUS_ENABLE, help_text="状态：1为在用，0为禁用")
     # role = models.ForeignKey(to=Role, db_column='role_id', on_delete=models.CASCADE)
     orgs = models.CharField(max_length=500, null=True, default=None, help_text="组织架构")
-    note = models.CharField(max_length=2000, blank=True, null=True, default=None, help_text="备注")
+    remark = models.CharField(max_length=2000, blank=True, null=True, default=None, help_text="备注")
     create_user = models.CharField(max_length=100, null=True, default="lipanpan65", help_text="创建人")
     update_user = models.CharField(max_length=100, null=True, default="lipanpan65", help_text="更新人")
     last_login = None
@@ -89,7 +89,7 @@ class Role(models.Model):
     update_user = models.CharField(max_length=128, default=None, help_text='修改人')
     create_time = models.DateTimeField(auto_now_add=True, help_text='创建时间')
     update_time = models.DateTimeField(auto_now=True, help_text='修改时间')
-    note = models.CharField(max_length=200, default=None, help_text='备注')
+    remark = models.CharField(max_length=200, default=None, help_text='备注')
 
     # users = models.ManyToManyField(UserInfo, through='User2Role', through_fields=('user', 'role'), blank=True,
     #                                related_name='role_user')
@@ -205,6 +205,8 @@ class Menus(BaseModel):
         return sub_children
 
     # class User2Role(models.Model):
+
+
 #     id = models.AutoField(primary_key=True, help_text="自增主键")
 #     user = models.ForeignKey(to=UserInfo, db_column='user_id', on_delete=models.CASCADE)
 #     role = models.ForeignKey(to=Role, db_column='role_id', on_delete=models.CASCADE)
@@ -236,3 +238,55 @@ class Menus(BaseModel):
 # exists, user = UserInfo.get_user(username=username)
 # if exists:
 #     User2Group.objects.create(user=user.first(), group=self)
+
+
+"""
+CREATE TABLE `dbms_user2role` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+  `user_id` int(11) NOT NULL COMMENT '用户ID',
+  `user_name` 
+  `role_id` int(11) NOT NULL COMMENT '角色ID',
+  `role_name` 
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_user_role` (`user_id`,`role_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='基础信息表-用户角色关联表';
+
+"""
+
+"""
+CREATE TABLE `dbms_global_dict` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `cname` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '字典名称',
+  `ckey` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '字典Key：唯一且不能修改',
+  `cvalue` text COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '字典的Value',
+  `enable` smallint NOT NULL DEFAULT '1' COMMENT '状态：1:启用，0:禁用',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `create_user` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '创建人',
+  `update_user` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '更新人',
+  `remakr` varchar(256) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '备注',
+  `yn` tinyint DEFAULT '1' COMMENT '是否有效:1有效,0无效',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_ckey` (`ckey`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='基础信息表-全局字典'
+
+"""
+
+
+class GlobalDict(BaseModel):
+    """
+    全局字典表
+    """
+    id = models.AutoField('id', primary_key=True, help_text='自增主键')
+    cname = models.CharField(max_length=100, help_text="名称")
+    # ctype = models.CharField(max_length=50, help_text='类型')  # 修改字段名称
+    ckey = models.CharField(max_length=128, help_text='key值')
+    cvalue = models.TextField(help_text='value值')
+    enable = models.IntegerField(help_text='状态: [在用]1 [禁用]0', default=1)
+    # create_user = models.CharField(max_length=50, help_text='创建人', default=None)
+    # update_user = models.CharField(max_length=50, help_text='修改人', null=True)
+    remark = models.CharField(max_length=256, help_text="备注", null=True, blank=True)
+    yn = models.SmallIntegerField(default=1, help_text='是否有效:1有效,0无效')
+
+    class Meta:
+        db_table = 'dbms_global_dict'

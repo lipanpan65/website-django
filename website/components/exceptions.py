@@ -1,58 +1,61 @@
 import logging
-
-import rest_framework.exceptions
-
-from components.response import BizResult, ResultEnum
-from rest_framework import status
+from rest_framework import exceptions, status
 from rest_framework.response import Response
 from rest_framework.views import exception_handler as origin_exception_handler
 
-logger = logging.getLogger()
+from components.response import BizResult, ResultEnum
 
+logger = logging.getLogger(__name__)
 
-# https://juejin.cn/post/6976496971368366116
-# https://q1mi.github.io/Django-REST-framework-documentation/api-guide/exceptions_zh/
 
 class BizException(RuntimeError):
     """
     自定义业务逻辑异常
     """
-
     status_code = status.HTTP_200_OK
 
-    def __init__(self,
-                 code=ResultEnum.exception.code,
-                 message=ResultEnum.exception.message, result_enum=None):
-        self.message = message
-        self.code = code
+    def __init__(self, code=ResultEnum.EXCEPTION.code, message=ResultEnum.EXCEPTION.message, result_enum=None):
         if isinstance(result_enum, ResultEnum):
-            self.code = result_enum.code
-            self.message = result_enum.message
-        super().__init__(message)
+            code, message = result_enum.code, result_enum.message
 
-        logger.error("[BizException] %s %s" % (self.code, self.message))
+        self.code = code
+        self.message = message
+        super().__init__(self.message)
+
+        logger.error(f"[BizException] Code: {self.code}, Message: {self.message}")
 
 
 def exception_handler(exc, context):
     """
-    Returns the response that should be used for any given exception.
-
-    By default we handle the REST framework `APIException`, and also
-    Django's built-in `Http404` and `PermissionDenied` exceptions.
-
-    Any unhandled exceptions may return `None`, which will cause a 500 error
-    to be raised.
+    全局异常处理函数，捕获并处理自定义和框架异常。
     """
-    # 这里对自定义的 CustomException 直接返回，保证系统其他异常不受影响
-    if isinstance(exc, rest_framework.exceptions.ValidationError):
-        print('----------')
-        print(exc)  # TODO 打印校验的异常信息，重复更新了，如果被拦截了还会走 全局定义的 response
-        print('----------')
-        data = BizResult.failure(result_enum=ResultEnum.validate)
+    # 处理 ValidationError
+    # 处理 ValidationError
+    if isinstance(exc, exceptions.ValidationError):
+        logger.warning(f"Validation Error: {exc}")
+
+        # 提取详细的错误信息
+        error_details = exc.detail if hasattr(exc, 'detail') else str(exc)
+
+        # 将错误信息包含在响应数据中
+        data = BizResult.failure(
+            # message=ResultEnum.VALIDATE.message,
+            data=error_details,
+            result_enum=ResultEnum.VALIDATE
+        )
         return Response(data=data, status=status.HTTP_200_OK)
-    else:
-        response = origin_exception_handler(exc, context)
-        return response
-    # if isinstance(exc, BizException):
-    #     print(exc)
-    #     return Response(data=exc.data, status=exc.status_code)
+
+    # 处理 BizException
+    if isinstance(exc, BizException):
+        logger.error(f"Business Exception: {exc}")
+        data = BizResult.failure(code=exc.code, message=exc.message)
+        return Response(data=data, status=exc.status_code)
+
+    # 处理其他异常
+    response = origin_exception_handler(exc, context)
+    if response is None:
+        logger.error(f"Unhandled Exception: {exc}", exc_info=True)
+        data = BizResult.failure(message="服务器内部错误", result_enum=ResultEnum.FAILURE)
+        return Response(data=data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return response

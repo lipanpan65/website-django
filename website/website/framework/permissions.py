@@ -1,10 +1,10 @@
 import re
 from rest_framework.permissions import BasePermission
+from account.models import UserInfo
 
 
 class UserRolePermission(BasePermission):
-    PATTERN_LOGIN_API = re.compile(r'^/api/operation/configure/user/login/')
-    PATTERN_LOGOUT_API = re.compile(r'^/api/operation/configure/user/logout/')
+    PATTERN_PASSPORT_API = re.compile(r'^/api/operation/configure/user/login/')
     PATTERN_API = re.compile(r'^/api/v\d+\.\d+/')
     PATTERN_API_V1 = re.compile(r'^/api/v1\.\d+/')
     PATTERN_API_V2 = re.compile(r'^/api/v2\.\d+/')
@@ -16,4 +16,18 @@ class UserRolePermission(BasePermission):
         Return `True` if permission is granted, `False` otherwise.
         """
         print(request.user)
+        # return True
+
+        """
+        Return `True` if permission is granted, `False` otherwise.
+        """
+        # path = request.path
+        # if PATTERN_PASSPORT_API.match(path):
+        #     return True
+
+        # 如果用户为系统管理员则返回True,否则返回False
+        is_admin = (isinstance(request.user, UserInfo) and request.user.role.role_type == 1)
+        if not is_admin:
+            return False
+
         return True
