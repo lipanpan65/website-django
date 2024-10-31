@@ -143,15 +143,19 @@ LOGGING = {
         },
         # 3[7mSuixinBlog: https://suixinblog.cn3[0m
         # \033[0;36m abc \033[0m
+        # 'console': {
+        #     'format': '[%(asctime)s] [%(name)s] [%(levelname)s] [%(filename)s:%(module)s:%(funcName)s:%(lineno)d] [%(processName)s:%(process)d] [%(threadName)s:%(thread)d] \033[1;36m %(message)s \033[0m'
+        # },
         'console': {
-            'format': '[%(asctime)s] [%(name)s] [%(levelname)s] [%(filename)s:%(module)s:%(funcName)s:%(lineno)d] [%(processName)s:%(process)d] [%(threadName)s:%(thread)d] \033[1;36m %(message)s \033[0m'
+            'format': '[%(asctime)s] [%(name)s] [%(levelname)s] [%(threadName)s:%(thread)d] \033[1;36m %(message)s \033[0m'
         },
         # \033[0;37;42m\tHello World\033[0m
         # \033[0;37;40m
         # \033[0;36m
         # %(module)s %(funcName)s
         'db.backends': {
-            'format': '\033[1;33m[%(name)s] [%(levelname)s] [%(processName)s:%(process)d] [%(threadName)s:%(thread)d]\n %(message)s \033[0m\n'
+            # 'format': '\033[1;33m[%(name)s] [%(levelname)s] [%(processName)s:%(process)d] [%(threadName)s:%(thread)d]\n %(message)s \033[0m\n'
+            'format': '\033[1;33m[%(name)s] [%(levelname)s] [%(processName)s:%(process)d] [%(threadName)s:%(thread)d] => %(message)s \033[0m\n'
         },
     },
     # 过滤
@@ -190,7 +194,7 @@ LOGGING = {
         },
         # 控制台输出
         'console': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'console',  # 输出格式
             # 'formatter': 'standard' if DEBUG else 'standard',  # 输出格式

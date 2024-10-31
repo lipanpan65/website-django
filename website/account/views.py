@@ -3,12 +3,103 @@ from django.shortcuts import render
 # Create your views here.
 import logging
 from rest_framework import viewsets
+from rest_framework import permissions
 from account import models
 from account import serializers
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from account.models import GlobalDict
 from components.pagination import SizeTablePageNumberPagination
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets, status, filters
+
 from components.response import ResultEnum, ApiResult
 
 logger = logging.getLogger()
+
+
+class GlobalDictViewSet(viewsets.ModelViewSet):
+    queryset = GlobalDict.objects.all()
+    serializer_class = serializers.GlobalDictSerializer
+    filter_backends = (filters.SearchFilter, DjangoFilterBackend, filters.OrderingFilter)
+    search_fields = ('cname', 'ckey')
+    filter_fields = ('status',)
+
+    # ordering_fields = ('id',)
+
+    def create(self, request, *args, **kwargs):
+        request.data.update({
+            "create_user": request.user.username,
+            "update_user": request.user.username
+        })
+        # super() 也可以不传递
+        return super().create(request, args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        request.data.update({
+            "create_user": request.user.username,
+            "update_user": request.user.username
+        })
+        return super(GlobalDictViewSet, self).update(request, *args, **kwargs)
+
+    # def destroy(self, request, *args, **kwargs):
+    #     pass
+
+    @action(methods=["GET"], detail=False)
+    def validate_cname(self, request, *args, **kwargs):
+        """
+        校验名称是否存在
+        """
+        cname = self.request.query_params.get("cname")
+        queryset = self.queryset.filter(cname=cname)
+        exists = queryset.exists()
+        data = dict(exists=exists, code=0)
+        return Response(status=status.HTTP_200_OK, data=data)
+
+    @action(methods=["GET"], detail=False)
+    def validate_ctype(self, request, *args, **kwargs):
+        """
+        校验ctype
+        """
+        ctype = self.request.query_params.get("ctype")
+        queryset = self.queryset.filter(ctype=ctype)
+        exists = queryset.exists()
+        data = dict(exists=exists, code=0)
+        return Response(status=status.HTTP_200_OK, data=data)
+
+
+class UserInfoViewSet(viewsets.ModelViewSet):
+    queryset = models.UserInfo.objects.all().order_by('-create_time')
+    serializer_class = serializers.UserInfoSerializer
+    pagination_class = SizeTablePageNumberPagination
+    permission_classes = [permissions.AllowAny]
+
+    # def create(self, request, *args, **kwargs):
+    #     serializer = self.get_serializer(data=request.data)
+    #     serializer.is_valid(raise_exception=True)
+    #     self.perform_create(serializer)
+    #     headers = self.get_success_headers(serializer.data)
+
+    def login(self, request, *args, **kwargs):
+        """
+        登录
+        """
+        pass
+
+    def register(self, request, *args, **kwargs):
+        """
+        注册
+        """
+        pass
+
+
+class RoleViewSet(viewsets.ModelViewSet):
+    queryset = models.Role.objects.all().order_by('-create_time')
+    # serializer_class = serializers.RoleSerializer
+    pagination_class = SizeTablePageNumberPagination
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
 
 
 class MenuViewSet(viewsets.ModelViewSet):

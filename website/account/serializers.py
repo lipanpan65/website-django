@@ -7,6 +7,16 @@ from rest_framework import serializers
 from account import models
 
 
+class GlobalDictSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.GlobalDict
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        ret = super(GlobalDictSerializer, self).to_representation(instance)
+        return ret
+
+
 class UserInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.UserInfo
