@@ -23,7 +23,7 @@ class GlobalDictViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.GlobalDictSerializer
     filter_backends = (filters.SearchFilter, DjangoFilterBackend, filters.OrderingFilter)
     search_fields = ('cname', 'ckey')
-    filter_fields = ('status',)
+    filterset_fields = ('enable',)
 
     # ordering_fields = ('id',)
 
@@ -32,7 +32,6 @@ class GlobalDictViewSet(viewsets.ModelViewSet):
             "create_user": request.user.username,
             "update_user": request.user.username
         })
-        # super() 也可以不传递
         return super().create(request, args, **kwargs)
 
     def update(self, request, *args, **kwargs):
@@ -95,11 +94,9 @@ class UserInfoViewSet(viewsets.ModelViewSet):
 
 class RoleViewSet(viewsets.ModelViewSet):
     queryset = models.Role.objects.all().order_by('-create_time')
-    # serializer_class = serializers.RoleSerializer
+    serializer_class = serializers.RoleSerializer
     pagination_class = SizeTablePageNumberPagination
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
+    filterset_fields = ('enable',)
 
 
 class MenuViewSet(viewsets.ModelViewSet):

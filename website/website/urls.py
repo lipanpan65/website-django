@@ -36,6 +36,7 @@ account_routers_v1.register(r'menus', account_views.MenuViewSet, basename='menus
 operator_routers_v1 = DefaultRouter()
 operator_routers_v1.register(r'authentication', authentication_views.AuthenticationViewSet, 'authentication')
 operator_routers_v1.register(r'global', account_views.GlobalDictViewSet, 'global')
+operator_routers_v1.register(r'role', account_views.RoleViewSet, 'role')
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
