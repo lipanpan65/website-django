@@ -264,8 +264,6 @@ class GlobalDict(BaseModel):
     ckey = models.CharField(max_length=128, help_text='key值')
     cvalue = models.TextField(help_text='value值')
     enable = models.IntegerField(help_text='状态: [在用]1 [禁用]0', default=1)
-    # create_user = models.CharField(max_length=50, help_text='创建人', default=None)
-    # update_user = models.CharField(max_length=50, help_text='修改人', null=True)
     remark = models.CharField(max_length=256, help_text="备注", null=True, blank=True)
     yn = models.SmallIntegerField(default=1, help_text='是否有效:1有效,0无效')
 
