@@ -5,6 +5,7 @@ from components.base_models import BaseModel
 class ArticleCategory(BaseModel):
     id = models.AutoField(db_column='id', primary_key=True, help_text='自增主键')
     category_name = models.CharField(db_column='category_name', max_length=256, help_text='分类名称')
+    enable = models.IntegerField(help_text='状态: [在用]1 [禁用]0', default=1)
     create_user = models.CharField(db_column='create_user', max_length=64, null=True, default=None, help_text='添加人')
     update_user = models.CharField(db_column='update_user', max_length=64, null=True, default=None, help_text='修改人')
     remark = models.CharField(db_column='remark', max_length=255, default=None, help_text='备注')

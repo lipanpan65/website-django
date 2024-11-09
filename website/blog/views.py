@@ -11,19 +11,15 @@ from components.response import ResultEnum, ApiResult
 logger = logging.getLogger()
 
 
-# from components.exceptions import BizException
-
-
 class ArticleViewSet(viewsets.ModelViewSet):
     queryset = models.Article.objects.all().order_by('-create_time')
     serializer_class = serializers.ArticleSerializer
     pagination_class = SizeTablePageNumberPagination
     filter_backends = (filters.SearchFilter, DjangoFilterBackend, filters.OrderingFilter)
-    filter_fields = ('=title',)
+    # filter_fields = ('=title',)
     search_fields = ('title',)
-
     # filterset_fields = ('group', 'level', 'time_type', 'yn')
-    # filterset_fields = ('status',)
+    filterset_fields = ('status',)
 
     # def update(self, request, *args, **kwargs):
     #     print(request)
@@ -58,8 +54,8 @@ class ArticleCategoryViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.ArticleCategorySerializer
     pagination_class = SizeTablePageNumberPagination
     filter_backends = (filters.SearchFilter, DjangoFilterBackend, filters.OrderingFilter)
-    # filter_fields = ('=title',)
     search_fields = ('category_name',)
+    filterset_fields = ('enable',)
 
     @action(methods=['GET'], detail=False)
     def validate_category_name(self, request, *args, **kwargs):
