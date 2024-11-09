@@ -63,15 +63,17 @@ class UserInfo(BaseModel):
         return self.username
 
 
-class Role(models.Model):
+class Role(BaseModel):
     STATUS_DISABLE = 0
     STATUS_ENABLE = 1
 
     ROLE_RD = 0
     ROLE_ADMIN = 1
+    ROLE_SUPER_ADMIN = 2
     ROLE_TYPE = (
         (ROLE_RD, "普通用户"),
-        (ROLE_ADMIN, "管理员")
+        (ROLE_ADMIN, "管理员"),
+        (ROLE_SUPER_ADMIN, "超级管理员")
     )
 
     STATUS = (
@@ -80,16 +82,14 @@ class Role(models.Model):
     )
 
     id = models.AutoField(primary_key=True, help_text="自增主键")
-    name = models.CharField(max_length=128, help_text='角色名称')
-    # role_type = models.CharField(max_length=128, help_text='角色类型:user 普通用户 admin 管理员')
-    # role_key = models.CharField(max_length=128, help_text="角色唯一标识")
-    role_type = models.IntegerField(choices=ROLE_TYPE, default=1, null=True, help_text="管理员类型：管理员、开发管理员")
-    status = models.IntegerField(choices=STATUS, default=STATUS_ENABLE, help_text="状态：1为在用，0为禁用")
+    role_name = models.CharField(max_length=128, help_text='角色名称')
+    role_type = models.SmallIntegerField(choices=ROLE_TYPE, default=1, null=True,
+                                         help_text="管理员类型：管理员、开发管理员")
+    enable = models.SmallIntegerField(choices=STATUS, default=STATUS_ENABLE, help_text="状态：1为在用，0为禁用")
     create_user = models.CharField(max_length=128, default=None, help_text='创建人')
     update_user = models.CharField(max_length=128, default=None, help_text='修改人')
-    create_time = models.DateTimeField(auto_now_add=True, help_text='创建时间')
-    update_time = models.DateTimeField(auto_now=True, help_text='修改时间')
     remark = models.CharField(max_length=200, default=None, help_text='备注')
+    yn = models.SmallIntegerField(default=1, help_text='是否有效:1有效,0无效')
 
     # users = models.ManyToManyField(UserInfo, through='User2Role', through_fields=('user', 'role'), blank=True,
     #                                related_name='role_user')
@@ -250,25 +250,6 @@ CREATE TABLE `dbms_user2role` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_user_role` (`user_id`,`role_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='基础信息表-用户角色关联表';
-
-"""
-
-"""
-CREATE TABLE `dbms_global_dict` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `cname` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '字典名称',
-  `ckey` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '字典Key：唯一且不能修改',
-  `cvalue` text COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '字典的Value',
-  `enable` smallint NOT NULL DEFAULT '1' COMMENT '状态：1:启用，0:禁用',
-  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `create_user` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '创建人',
-  `update_user` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '更新人',
-  `remakr` varchar(256) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '备注',
-  `yn` tinyint DEFAULT '1' COMMENT '是否有效:1有效,0无效',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `idx_ckey` (`ckey`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='基础信息表-全局字典'
 
 """
 
