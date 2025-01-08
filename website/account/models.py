@@ -269,3 +269,74 @@ class GlobalDict(BaseModel):
 
     class Meta:
         db_table = 'dbms_global_dict'
+
+
+class Organizations(models.Model):
+    ORGANIZATION_TYPES = [
+        ('company', '公司'),
+        ('department', '部门'),
+        ('branch', '分公司'),
+        ('business_unit', '业务单元'),
+        ('team', '团队'),
+        ('project_team', '项目组'),
+        ('regional_office', '区域分部'),
+        ('functional_center', '职能中心'),
+        ('virtual_team', '虚拟组织'),
+    ]
+
+    # 自增主键，自动生成唯一ID
+    id = models.AutoField(primary_key=True, help_text="自增主键，唯一标识")
+    # 组织架构的唯一ID，字符类型，最大长度30
+    org_id = models.CharField(max_length=255, help_text="组织架构ID，用于唯一标识组织")
+    # 组织架构名称，字符类型，最大长度255
+    org_name = models.CharField(max_length=255, help_text="组织架构名称")
+    # 父组织ID，用于层级结构表示，可为空
+    parent_org_id = models.CharField(max_length=30, blank=True, null=True, help_text="父组织ID，顶级组织为空")
+    # 启用状态，默认1为启用，0为禁用
+    enable = models.IntegerField(default=1, help_text="启用状态，1表示启用，0表示禁用")
+    # 组织架构全称，字符类型，最大长度255
+    org_fullname = models.CharField(max_length=255, help_text="组织架构全名")
+    # 组织层级，表示组织在层级结构中的深度
+    org_level = models.IntegerField(default=1, help_text="组织层级，从顶层开始递增")
+    # 备注信息，用于描述组织的额外信息
+    remark = models.TextField(blank=True, null=True, help_text="备注信息，描述组织的附加说明")
+    # 记录创建时间，默认当前时间
+    create_time = models.DateTimeField(auto_now_add=True, help_text="创建时间")
+    # 记录更新时间，默认当前时间
+    update_time = models.DateTimeField(auto_now=True, help_text="更新时间")
+    # 组织类型，使用预定义的枚举值（如公司、部门、团队等）
+    org_type = models.CharField(
+        max_length=50,
+        choices=ORGANIZATION_TYPES,
+        help_text="组织类型，例如：公司、部门、团队等",
+        default='company'
+    )
+    # 组织的负责人ID，指向用户ID，可为空
+    manager_id = models.IntegerField(null=True, blank=True, help_text="组织负责人ID")
+
+    # 显示顺序，用于定义展示的排序，默认值为0
+    sort_order = models.IntegerField(default=0, help_text="显示顺序")
+
+    # 逻辑删除标志，1表示有效，0表示无效（软删除）
+    yn = models.BooleanField(default=True, help_text="逻辑删除标志，1为有效，0为无效")
+
+    class Meta:
+        db_table = 'dbms_organizations'
+        verbose_name = '组织架构'
+        verbose_name_plural = '组织架构'
+
+    def __str__(self):
+        return f"{self.org_name} ({self.org_id})"
+
+    @classmethod
+    def parents(cls):
+        """
+        获取全量的父级菜单
+        """
+        return cls.objects.filter(parent_org_id__isnull=True)
+
+    @property
+    def children(self):
+        """ 获取当前菜单的全部子菜单 """
+        queryset = Organizations.objects.filter(parent_org_id=self.org_id).all()
+        return queryset if queryset else []
