@@ -60,3 +60,23 @@ class MenusTreeSerializer(serializers.ModelSerializer):
         if children:
             serializer = MenusSerializer(children, many=True)
             return serializer.data
+
+
+class OrganizationsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Organizations
+        fields = '__all__'
+
+
+class OrganizationTreeSerializer(serializers.ModelSerializer):
+    children = serializers.SerializerMethodField()
+
+    def get_children(self, instance):
+        children = instance.children
+        if children:
+            serializer = OrganizationsSerializer(children, many=True)
+            return serializer.data
+
+    class Meta:
+        model = models.Organizations
+        fields = '__all__'

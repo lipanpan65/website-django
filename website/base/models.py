@@ -79,6 +79,3 @@ class BaseModel(models.Model):
     # @classmethod
     # def find_by_pks(cls, pks):
     #     return cls.objects.filter(pk__in=pks)
-
-
-

@@ -12,6 +12,7 @@ from account.models import GlobalDict
 from components.pagination import SizeTablePageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, status, filters
+import uuid
 
 from components.response import ResultEnum, ApiResult
 
@@ -150,3 +151,31 @@ class MenuViewSet(viewsets.ModelViewSet):
     #
     #     serializer = self.get_serializer(data, many=True)
     #     return ApiResult.success(data=serializer.data)
+
+
+class OrganizationsViewSet(viewsets.ModelViewSet):
+    queryset = models.Organizations.objects.all().order_by('-create_time')
+    serializer_class = serializers.OrganizationTreeSerializer
+    pagination_class = SizeTablePageNumberPagination
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        queryset = queryset.filter(parent_org_id__isnull=True)
+        page = self.paginate_queryset(queryset)
+        serializer = self.get_serializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        """
+        创建组织架构
+        """
+        org_id = str(uuid.uuid4())  # 自定义 org_id
+        parent_org_id = request.data.get('parent_org_id')
+        if parent_org_id is None:
+            org_fullname = request.data.get('org_name')
+            # return Response(status=status.HTTP_400_BAD_REQUEST)
+        else:
+            org_fullname = request.data.get('org_name')
+
+        request.data.update({"org_id": org_id, "org_fullname": org_fullname})
+        return super().create(request, *args, **kwargs)

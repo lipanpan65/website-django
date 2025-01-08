@@ -8,7 +8,7 @@ class ArticleCategory(BaseModel):
     enable = models.IntegerField(help_text='状态: [在用]1 [禁用]0', default=1)
     create_user = models.CharField(db_column='create_user', max_length=64, null=True, default=None, help_text='添加人')
     update_user = models.CharField(db_column='update_user', max_length=64, null=True, default=None, help_text='修改人')
-    remark = models.CharField(db_column='remark', max_length=255, default=None, help_text='备注')
+    remark = models.CharField(db_column='remark', max_length=255, default=None, null=True, help_text='备注')
     yn = models.SmallIntegerField(default=1, help_text='数据是否有效')
 
     class Meta:
@@ -16,7 +16,6 @@ class ArticleCategory(BaseModel):
 
 
 class Article(BaseModel):
-
     ARTICLE_STATUS = (
         ('draft', u'草稿'),
         ('publish', u'已发布')
