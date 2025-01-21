@@ -6,11 +6,18 @@
 # @Desc :
 
 from .common import *
+from configparser import ConfigParser
+
+db_config = ConfigParser()
+db_config.read("/Users/lipanpan/github/website-django/website/website/settings/db.ini")
 
 log_path = os.path.join(BASE_DIR, 'logs')
 
 if not os.path.exists(log_path):
     os.mkdir(log_path)
+
+
+
 
 # print(BASE_DIR)
 ###################################################
@@ -26,12 +33,11 @@ ALLOWED_HOSTS = ['*']
 
 DATABASES['default'] = {
     'ENGINE': 'django.db.backends.mysql',
-    'NAME': 'website',
-    'USER': 'website_rw',
-    # 'PASSWORD': '%aKyWJ9nesb2',
-    'PASSWORD': 'li+0613!BN',
-    'HOST': 'db.lipanpan.com',
-    'PORT': '3261',
+    'NAME': db_config.get('default', 'database'),
+    'USER': db_config.get('default', 'user'),
+    'PASSWORD': db_config.get('default', 'password'),
+    'HOST': db_config.get('default', 'host'),
+    'PORT': db_config.get('default', 'port'),
     'OPTIONS': {'charset': 'utf8mb4'},
 }
 
