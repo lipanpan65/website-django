@@ -15,8 +15,8 @@ DATABASES['default'] = {
     'ENGINE': 'django.db.backends.mysql',
     'NAME': 'website',
     'USER': 'root',
-    'PASSWORD': 'li+0613!QW',
-    'HOST': 'db.lipanpan.com',
+    'PASSWORD': '%aKyWJ9nesb2',
+    'HOST': 'localhost',
     'PORT': '3306',
     'OPTIONS': {'charset': 'utf8mb4'},
 }
