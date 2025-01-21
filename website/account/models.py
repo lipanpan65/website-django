@@ -291,7 +291,7 @@ class Organizations(models.Model):
     # 组织架构名称，字符类型，最大长度255
     org_name = models.CharField(max_length=255, help_text="组织架构名称")
     # 父组织ID，用于层级结构表示，可为空
-    parent_org_id = models.CharField(max_length=30, blank=True, null=True, help_text="父组织ID，顶级组织为空")
+    parent_org_id = models.CharField(max_length=255, blank=True, null=True, help_text="父组织ID，顶级组织为空")
     # 启用状态，默认1为启用，0为禁用
     enable = models.IntegerField(default=1, help_text="启用状态，1表示启用，0表示禁用")
     # 组织架构全称，字符类型，最大长度255
@@ -340,3 +340,15 @@ class Organizations(models.Model):
         """ 获取当前菜单的全部子菜单 """
         queryset = Organizations.objects.filter(parent_org_id=self.org_id).all()
         return queryset if queryset else []
+
+    def get_sub_children(self):
+        """
+        获取所有的子节点
+        """
+        children = self.children
+        sub_children = list(children)
+        if not sub_children:
+            return sub_children
+        for child in children:
+            sub_children.extend(child.get_sub_children())
+        return sub_children

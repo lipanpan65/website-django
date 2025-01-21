@@ -175,7 +175,22 @@ class OrganizationsViewSet(viewsets.ModelViewSet):
             org_fullname = request.data.get('org_name')
             # return Response(status=status.HTTP_400_BAD_REQUEST)
         else:
+            request.data.update({"org_id": org_id, "parent_org_id": parent_org_id})
             org_fullname = request.data.get('org_name')
 
         request.data.update({"org_id": org_id, "org_fullname": org_fullname})
         return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        # obj = self.get_object()
+        # print(obj)
+        request.data.update({"org_fullname": "org_fullname"})
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        children = instance.get_sub_children()
+        if children:
+            map(lambda child: child.delete(), children)
+            # children.delete()
+        return super().destroy(request, *args, **kwargs)

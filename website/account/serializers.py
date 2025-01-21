@@ -67,6 +67,14 @@ class OrganizationsSerializer(serializers.ModelSerializer):
         model = models.Organizations
         fields = '__all__'
 
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        # children = instance.get_sub_children()
+        children = instance.children
+        if children:
+            ret['children'] = OrganizationsSerializer(children, many=True).data
+        return ret
+
 
 class OrganizationTreeSerializer(serializers.ModelSerializer):
     children = serializers.SerializerMethodField()

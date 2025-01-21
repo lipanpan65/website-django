@@ -27,10 +27,11 @@ ALLOWED_HOSTS = ['*']
 DATABASES['default'] = {
     'ENGINE': 'django.db.backends.mysql',
     'NAME': 'website',
-    'USER': 'root',
-    'PASSWORD': '%aKyWJ9nesb2',
-    'HOST': 'localhost',
-    'PORT': '13380',
+    'USER': 'website_rw',
+    # 'PASSWORD': '%aKyWJ9nesb2',
+    'PASSWORD': 'li+0613!BN',
+    'HOST': 'db.lipanpan.com',
+    'PORT': '3261',
     'OPTIONS': {'charset': 'utf8mb4'},
 }
 
