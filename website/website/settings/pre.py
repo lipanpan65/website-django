@@ -13,10 +13,10 @@ WSGI_APPLICATION = 'website.wsgi.pre.application'
 
 DATABASES['default'] = {
     'ENGINE': 'django.db.backends.mysql',
-    'NAME': 'doit',
+    'NAME': 'website',
     'USER': 'root',
-    'PASSWORD': 'localhost',
-    'HOST': '172.31.32.57',
+    'PASSWORD': 'li+0613!QW',
+    'HOST': 'db.lipanpan.com',
     'PORT': '3306',
     'OPTIONS': {'charset': 'utf8mb4'},
 }
