@@ -50,7 +50,7 @@ class GlobalDictViewSet(viewsets.ModelViewSet):
         """
         校验名称是否存在
         """
-        cname = self.request.query_params.get("cname")
+        cname = request.query_params.get("cname")
         queryset = self.queryset.filter(cname=cname)
         exists = queryset.exists()
         data = dict(exists=exists, code=0)
@@ -61,7 +61,7 @@ class GlobalDictViewSet(viewsets.ModelViewSet):
         """
         校验ctype
         """
-        ctype = self.request.query_params.get("ctype")
+        ctype = request.query_params.get("ctype")
         queryset = self.queryset.filter(ctype=ctype)
         exists = queryset.exists()
         data = dict(exists=exists, code=0)
@@ -74,11 +74,19 @@ class UserInfoViewSet(viewsets.ModelViewSet):
     pagination_class = SizeTablePageNumberPagination
     permission_classes = [permissions.AllowAny]
 
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return super(UserInfoViewSet, self).create(request, *args, **kwargs)
     # def create(self, request, *args, **kwargs):
     #     serializer = self.get_serializer(data=request.data)
     #     serializer.is_valid(raise_exception=True)
     #     self.perform_create(serializer)
     #     headers = self.get_success_headers(serializer.data)
+    #     return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def login(self, request, *args, **kwargs):
         """

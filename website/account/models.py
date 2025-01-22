@@ -2,16 +2,58 @@ from django.db import models
 from components.base_models import BaseModel
 
 
+class Role(BaseModel):
+    STATUS_DISABLE = 0
+    STATUS_ENABLE = 1
+
+    ROLE_RD = 0
+    ROLE_ADMIN = 1
+    ROLE_SUPER_ADMIN = 2
+    ROLE_TYPE = (
+        (ROLE_RD, "普通用户"),
+        (ROLE_ADMIN, "管理员"),
+        (ROLE_SUPER_ADMIN, "超级管理员")
+    )
+
+    STATUS = (
+        (STATUS_ENABLE, "启用"),
+        (STATUS_DISABLE, "禁用")
+    )
+
+    id = models.AutoField(primary_key=True, help_text="自增主键")
+    role_name = models.CharField(max_length=128, help_text='角色名称')
+    role_type = models.SmallIntegerField(choices=ROLE_TYPE, default=1, null=True,
+                                         help_text="管理员类型：管理员、开发管理员")
+    enable = models.SmallIntegerField(choices=STATUS, default=STATUS_ENABLE, help_text="状态：1为在用，0为禁用")
+    create_user = models.CharField(max_length=128, default=None, help_text='创建人')
+    update_user = models.CharField(max_length=128, default=None, help_text='修改人')
+    remark = models.CharField(max_length=200, default=None, help_text='备注')
+    yn = models.SmallIntegerField(default=1, help_text='是否有效:1有效,0无效')
+
+    # users = models.ManyToManyField(UserInfo, through='User2Role', through_fields=('user', 'role'), blank=True,
+    #                                related_name='role_user')
+    class Meta:
+        db_table = "dbms_user_role"
+
+
+# TODO 规范数据库
 class UserInfo(BaseModel):
-    STATUS = ()
-    STATUS_ENABLE = ""
+    STATUS_DISABLE = 0
+    STATUS_ENABLE = 1
+
+    STATUS = (
+        (STATUS_ENABLE, "启用"),
+        (STATUS_DISABLE, "禁用")
+    )
+
     id = models.AutoField(primary_key=True, help_text="自增主键")
     username = models.CharField(max_length=50, unique=True, help_text="用户名")
+    password = models.CharField(max_length=255, help_text='用户密码')
     name = models.CharField(max_length=50, null=True, default=None, help_text="姓名")
     email = models.CharField(max_length=50, null=True, default=None, help_text="邮箱")
     phone = models.CharField(max_length=50, null=True, default=None, help_text="联系电话")
     enable = models.IntegerField(choices=STATUS, default=STATUS_ENABLE, help_text="状态：1为在用，0为禁用")
-    # role = models.ForeignKey(to=Role, db_column='role_id', on_delete=models.CASCADE)
+    role = models.ForeignKey(to=Role, db_column='role_id', on_delete=models.CASCADE)
     orgs = models.CharField(max_length=500, null=True, default=None, help_text="组织架构")
     remark = models.CharField(max_length=2000, blank=True, null=True, default=None, help_text="备注")
     create_user = models.CharField(max_length=100, null=True, default="lipanpan65", help_text="创建人")
@@ -61,40 +103,6 @@ class UserInfo(BaseModel):
 
     def check_password(self, raw_password):
         return self.username
-
-
-class Role(BaseModel):
-    STATUS_DISABLE = 0
-    STATUS_ENABLE = 1
-
-    ROLE_RD = 0
-    ROLE_ADMIN = 1
-    ROLE_SUPER_ADMIN = 2
-    ROLE_TYPE = (
-        (ROLE_RD, "普通用户"),
-        (ROLE_ADMIN, "管理员"),
-        (ROLE_SUPER_ADMIN, "超级管理员")
-    )
-
-    STATUS = (
-        (STATUS_ENABLE, "启用"),
-        (STATUS_DISABLE, "禁用")
-    )
-
-    id = models.AutoField(primary_key=True, help_text="自增主键")
-    role_name = models.CharField(max_length=128, help_text='角色名称')
-    role_type = models.SmallIntegerField(choices=ROLE_TYPE, default=1, null=True,
-                                         help_text="管理员类型：管理员、开发管理员")
-    enable = models.SmallIntegerField(choices=STATUS, default=STATUS_ENABLE, help_text="状态：1为在用，0为禁用")
-    create_user = models.CharField(max_length=128, default=None, help_text='创建人')
-    update_user = models.CharField(max_length=128, default=None, help_text='修改人')
-    remark = models.CharField(max_length=200, default=None, help_text='备注')
-    yn = models.SmallIntegerField(default=1, help_text='是否有效:1有效,0无效')
-
-    # users = models.ManyToManyField(UserInfo, through='User2Role', through_fields=('user', 'role'), blank=True,
-    #                                related_name='role_user')
-    class Meta:
-        db_table = "dbms_user_role"
 
 
 # class RoleViewSet(viewsets.ModelViewSet):

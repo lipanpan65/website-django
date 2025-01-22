@@ -18,9 +18,14 @@ class GlobalDictSerializer(serializers.ModelSerializer):
 
 
 class RoleSerializer(serializers.ModelSerializer):
+    role_type_display = serializers.SerializerMethodField()
+
     class Meta:
         model = models.Role
         fields = '__all__'
+
+    def get_role_type_display(self, instance):
+        return instance.get_role_type_display()
 
     def to_representation(self, instance):
         ret = super(RoleSerializer, self).to_representation(instance)
