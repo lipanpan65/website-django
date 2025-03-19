@@ -67,6 +67,7 @@ class AuthenticationViewSet(viewsets.ModelViewSet):
         # TODO 密码处理校验
         password = request.data.get("password")
         user = UserInfo.objects.save(**dict(user_name=user_name, password=password))
+        # UserInfo.objects.create(user=user)
         if user:
             pass
         return ApiResult.success(data=user)

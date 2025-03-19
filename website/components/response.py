@@ -1,79 +1,20 @@
-import enum
-
+from __future__ import annotations
+from typing import Any, Optional, TypedDict, Union
 from rest_framework.response import Response
 from rest_framework import status
-
-# https://juejin.cn/post/7307502467826008091
-from abc import ABC
-from collections.abc import MutableMapping
-
-# class BaseResult(dict):
-#
-#     def __init__(self, message='成功', data=None, *args, **kwargs):
-#         super(BaseResult, self).__init__()
-#         if kwargs:
-#             data = self.get('data') or dict()
-#             data.update(kwargs)
-#         self.update(success=True, message=message, data=data)
-#
-#     def success(self, message='操作成功', data=None, **kwargs):
-#         self.update(success=True, message=message, data=data)
-#         return self
-#
-#     def failure(self, message='操作失败', data=None, **kwargs):
-#         self.update(success=False, message=message, data=data)
-#         return self
-#
-#     @property
-#     def message(self): return self.get('message')
-#
-#     @property
-#     def ok(self): return self.get('success')
-#
-#     @property
-#     def data(self): return self.get('data')
-
-
-# class _BizResult(BaseResult):
-#
-#     def success(self, message='操作成功', data=None, result_enum=None, **kwargs):
-#         # data = data if data else dict()
-#         # data.update(**kwargs)
-#         if isinstance(result_enum, ResultEnum):
-#             self.update(success=True, code=result_enum.code, message=result_enum.message, data=data)
-#         else:
-#             self.update(success=True, message=message, data=data)
-#
-#         return self
-#
-#     def failure(self, message='操作失败', data=None, result_enum=None, **kwargs):
-#         if isinstance(result_enum, ResultEnum):
-#             self.update(success=False, code=result_enum.code, message=result_enum.message, data=data)
-#         else:
-#             self.update(success=False, message=message, data=data)
-#         return self
-
-
-# class BaseApiResult(BaseResult):
-#
-#     def success(self, code=ResultEnum.success.code, message=ResultEnum.success.message, data=None, **kwargs):
-#         self.update(code=code, success=True, message=message, data=data)
-#         return Response(data=self, status=status.HTTP_200_OK)
-#
-#     def failure(self, code=ResultEnum.failure.code, message=ResultEnum.failure.message, data=None, result_enum=None,
-#                 **kwargs):
-#         if isinstance(result_enum, ResultEnum):
-#             self.update(success=False, code=result_enum.code, message=result_enum.message, data=data)
-#         else:
-#             self.update(code=code, success=False, message=message, data=data)
-#         return Response(data=self, status=status.HTTP_200_OK)
-
+from rest_framework.utils.serializer_helpers import ReturnList
 
 import enum
-from rest_framework.response import Response
-from rest_framework import status
 
 
+# 定义响应类型
+class ResultDict(TypedDict):
+    code: str
+    success: bool
+    message: str
+    data: dict[str, Any]
+
+# 错误码枚举
 class ResultEnum(enum.Enum):
     SUCCESS = ("0000", '操作成功')
     EXCEPTION = ('5000', '业务逻辑异常')
@@ -81,67 +22,107 @@ class ResultEnum(enum.Enum):
     FAILURE = ("9999", '操作失败')
 
     @property
-    def code(self):
+    def code(self) -> str:
         return self.value[0]
 
     @property
-    def message(self):
+    def message(self) -> str:
         return self.value[1]
 
 
-class BaseResult(dict):
-    def __init__(self, success=True, message='成功', data=None, code=None, **kwargs):
-        super(BaseResult, self).__init__()
-        # 初始化时，允许附加额外的数据
-        data = data or {}
-        data.update(kwargs)
-        self.update(success=success, message=message, data=data)
-        if code:
-            self.update(code=code)
+# 基础响应构建器
+class BaseResultBuilder:
+    def __init__(self, success: bool, code: str, message: str, data: Optional[dict] = None):
+        self._data: ResultDict = {
+            "code": code,
+            "success": success,
+            "message": message,
+            "data": data if data is not None else {}
+        }
 
-    def success(self, message='操作成功', data=None, code=ResultEnum.SUCCESS.code, **kwargs):
-        """成功响应"""
-        data = data or {}
-        self.update(success=True, message=message, data=data, code=code)
+    def with_data(self, **kwargs) -> 'BaseResultBuilder':
+        """添加额外数据字段"""
+        if 'data' in kwargs:
+            data_value = kwargs.pop('data')
+            # 处理字典类型
+            if isinstance(data_value, dict):
+                self._data["data"].update(data_value)
+            # 处理 ReturnList 类型
+            elif isinstance(data_value, ReturnList):
+                # 将 ReturnList 中的元素逐个合并到 data 字典
+                if 'page' in kwargs:
+                    self._data["data"] = dict(page=kwargs.pop('page'),data=data_value)
+            # 处理其他可迭代类型
+            elif hasattr(data_value, '__iter__'):
+                for item in data_value:
+                    if isinstance(item, dict):
+                        self._data["data"].update(item)
+            # 其他类型处理
+            else:
+                # 这里可以根据需要处理其他类型，例如将单个值存入指定键
+                self._data["data"]["raw_data"] = data_value
+        # 处理剩余的键值对
+        self._data["data"].update(kwargs)
         return self
 
-    def failure(self, message='操作失败', data=None, code=ResultEnum.FAILURE.code, **kwargs):
-        """失败响应"""
-        data = data or {}
-        self.update(success=False, message=message, data=data, code=code)
-        return self
+    def build(self) -> ResultDict:
+        """构建最终响应字典"""
+        return self._data
 
 
-class BaseBizResult(BaseResult):
-    def success(self, message='操作成功', data=None, result_enum=None, **kwargs):
-        """处理业务逻辑成功的返回"""
-        if isinstance(result_enum, ResultEnum):
-            return super().success(message=result_enum.message, data=data, code=result_enum.code, **kwargs)
-        return super().success(message=message, data=data, **kwargs)
+# 业务逻辑响应
+class BizResult:
+    @staticmethod
+    def success(result_enum: ResultEnum = ResultEnum.SUCCESS, **kwargs) -> ResultDict:
+        """成功响应构建器"""
+        data = kwargs.pop('data', {})
+        return BaseResultBuilder(
+            success=True,
+            code=result_enum.code,
+            message=result_enum.message
+        ).with_data(**data, **kwargs).build()
 
-    def failure(self, message='操作失败', data=None, result_enum=None, **kwargs):
-        """处理业务逻辑失败的返回"""
-        if isinstance(result_enum, ResultEnum):
-            return super().failure(message=result_enum.message, data=data, code=result_enum.code, **kwargs)
-        return super().failure(message=message, data=data, **kwargs)
-
-
-class BaseApiResult(BaseResult):
-    def success(self, message=ResultEnum.SUCCESS.message, data=None, code=ResultEnum.SUCCESS.code, **kwargs):
-        """API 成功响应"""
-        response_data = super().success(message=message, data=data, code=code, **kwargs)
-        return Response(data=response_data, status=status.HTTP_200_OK)
-
-    def failure(self, message=ResultEnum.FAILURE.message, data=None, code=ResultEnum.FAILURE.code, result_enum=None,
-                **kwargs):
-        """API 失败响应"""
-        if result_enum and isinstance(result_enum, ResultEnum):
-            response_data = super().failure(message=result_enum.message, data=data, code=result_enum.code, **kwargs)
-        else:
-            response_data = super().failure(message=message, data=data, code=code, **kwargs)
-        return Response(data=response_data, status=status.HTTP_200_OK)
+    @staticmethod
+    def failure(result_enum: ResultEnum = ResultEnum.FAILURE, **kwargs) -> ResultDict:
+        """失败响应构建器"""
+        return BaseResultBuilder(
+            success=False,
+            code=result_enum.code,
+            message=result_enum.message
+        ).with_data(**kwargs).build()
 
 
-# # 使用示例
-BizResult = BaseBizResult()
-ApiResult = BaseApiResult()
+# API响应包装
+class ApiResult:
+    @staticmethod
+    def success(result_enum: ResultEnum = ResultEnum.SUCCESS, **kwargs) -> Response:
+        """成功API响应"""
+        return Response(
+            data=BizResult.success(result_enum, **kwargs),
+            status=status.HTTP_200_OK
+        )
+
+    @staticmethod
+    def failure(result_enum: ResultEnum = ResultEnum.FAILURE, **kwargs) -> Response:
+        """失败API响应"""
+        return Response(
+            data=BizResult.failure(result_enum, **kwargs),
+            status=status.HTTP_200_OK
+        )
+
+
+# 使用示例
+if __name__ == "__main__":
+    # 业务逻辑使用
+    biz_success = BizResult.success(ResultEnum.SUCCESS, user="admin")
+    print(biz_success)
+
+    biz_failure = BizResult.failure(ResultEnum.VALIDATE, error="invalid email")
+    print(biz_failure)
+
+    # API接口使用
+    api_success = ApiResult.success(ResultEnum.SUCCESS, count=100)
+    print(api_success.data)
+
+    api_failure = ApiResult.failure(ResultEnum.EXCEPTION, details="database error")
+    print(api_failure.data)
