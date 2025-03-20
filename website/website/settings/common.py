@@ -253,4 +253,9 @@ LOGGING = {
 }
 
 # 用户的配置
-# AUTH_USER_MODEL = 'users.UserInfo'
+AUTH_USER_MODEL = 'account.UserInfo'
+
+# 在 settings.py 中添加以下内容
+MIGRATION_MODULES = {
+    'account': None,
+}

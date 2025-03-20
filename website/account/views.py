@@ -81,6 +81,7 @@ class UserInfoViewSet(viewsets.ModelViewSet):
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return super(UserInfoViewSet, self).create(request, *args, **kwargs)
+
     # def create(self, request, *args, **kwargs):
     #     serializer = self.get_serializer(data=request.data)
     #     serializer.is_valid(raise_exception=True)
@@ -105,7 +106,7 @@ class RoleViewSet(viewsets.ModelViewSet):
     queryset = models.Role.objects.all().order_by('-create_time')
     serializer_class = serializers.RoleSerializer
     pagination_class = SizeTablePageNumberPagination
-    filterset_fields = ('enable',)
+    filterset_fields = ('enable', 'role_type')
 
 
 class MenuViewSet(viewsets.ModelViewSet):
@@ -179,12 +180,19 @@ class OrganizationsViewSet(viewsets.ModelViewSet):
         """
         org_id = str(uuid.uuid4())  # 自定义 org_id
         parent_org_id = request.data.get('parent_org_id')
+        org_name = request.data.get('org_name')
+
         if parent_org_id is None:
-            org_fullname = request.data.get('org_name')
-            # return Response(status=status.HTTP_400_BAD_REQUEST)
+            # 如果没有父组织ID，说明是根组织，全称就是自身名称
+            org_fullname = org_name
         else:
-            request.data.update({"org_id": org_id, "parent_org_id": parent_org_id})
-            org_fullname = request.data.get('org_name')
+            try:
+                # 获取父组织实例
+                parent_org = models.Organizations.objects.get(org_id=parent_org_id)
+                # 生成组织架构全称
+                org_fullname = f"{parent_org.get_full_org_name()}-{org_name}"
+            except models.Organizations.DoesNotExist:
+                return Response({"error": "父组织不存在"}, status=status.HTTP_400_BAD_REQUEST)
 
         request.data.update({"org_id": org_id, "org_fullname": org_fullname})
         return super().create(request, *args, **kwargs)
@@ -195,10 +203,27 @@ class OrganizationsViewSet(viewsets.ModelViewSet):
         request.data.update({"org_fullname": "org_fullname"})
         return super().update(request, *args, **kwargs)
 
+    # def destroy(self, request, *args, **kwargs):
+    #     instance = self.get_object()
+    #     children = instance.get_sub_children()
+    #     if children:
+    #         map(lambda child: child.delete(), children)
+    #         # children.delete()
+    #     return super().destroy(request, *args, **kwargs)
+    #
     def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        children = instance.get_sub_children()
-        if children:
-            map(lambda child: child.delete(), children)
-            # children.delete()
-        return super().destroy(request, *args, **kwargs)
+        try:
+            instance = self.get_object()
+            children = instance.get_sub_children()
+            if children:
+                # 使用 for 循环删除每个子节点
+                for child in children:
+                    child.delete()
+            # 删除当前节点
+            self.perform_destroy(instance)
+            # return Response(status=status.HTTP_204_NO_CONTENT)
+            return ApiResult.success()
+        except Exception as e:
+            # 处理异常，返回错误信息
+            # return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return ApiResult.failure(detail=str(e))

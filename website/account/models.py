@@ -1,5 +1,198 @@
+import binascii
+import os
+
 from django.db import models
+from django.db.models import Prefetch
 from components.base_models import BaseModel
+from django.contrib.auth.models import AbstractUser, AbstractBaseUser
+from django.utils.translation import gettext_lazy as _
+from django.conf import settings
+
+
+class Organizations(models.Model):
+    ORGANIZATION_TYPES = [
+        ('company', '公司'),
+        ('department', '部门'),
+        ('branch', '分公司'),
+        ('business_unit', '业务单元'),
+        ('team', '团队'),
+        ('project_team', '项目组'),
+        ('regional_office', '区域分部'),
+        ('functional_center', '职能中心'),
+        ('virtual_team', '虚拟组织'),
+    ]
+
+    # 自增主键，自动生成唯一ID
+    id = models.AutoField(primary_key=True, help_text="自增主键，唯一标识")
+    # 组织架构的唯一ID，字符类型，最大长度30
+    org_id = models.CharField(max_length=255, unique=True, help_text="组织架构ID，用于唯一标识组织")
+    # 组织架构名称，字符类型，最大长度255
+    org_name = models.CharField(max_length=255, help_text="组织架构名称")
+    # 父组织ID，用于层级结构表示，可为空
+    parent_org_id = models.CharField(max_length=255, blank=True, null=True, help_text="父组织ID，顶级组织为空")
+    # 启用状态，默认1为启用，0为禁用
+    enable = models.IntegerField(default=1, help_text="启用状态，1表示启用，0表示禁用")
+    # 组织架构全称，字符类型，最大长度255
+    org_fullname = models.CharField(max_length=255, help_text="组织架构全名")
+    # 组织层级，表示组织在层级结构中的深度
+    org_level = models.IntegerField(default=1, help_text="组织层级，从顶层开始递增")
+    # 备注信息，用于描述组织的额外信息
+    remark = models.TextField(blank=True, null=True, help_text="备注信息，描述组织的附加说明")
+    # 记录创建时间，默认当前时间
+    create_time = models.DateTimeField(auto_now_add=True, help_text="创建时间")
+    # 记录更新时间，默认当前时间
+    update_time = models.DateTimeField(auto_now=True, help_text="更新时间")
+    # 组织类型，使用预定义的枚举值（如公司、部门、团队等）
+    org_type = models.CharField(
+        max_length=50,
+        choices=ORGANIZATION_TYPES,
+        help_text="组织类型，例如：公司、部门、团队等",
+        default='company'
+    )
+    # 组织的负责人ID，指向用户ID，可为空
+    manager_id = models.IntegerField(null=True, blank=True, help_text="组织负责人ID")
+
+    # 显示顺序，用于定义展示的排序，默认值为0
+    sort_order = models.IntegerField(default=0, help_text="显示顺序")
+
+    # 逻辑删除标志，1表示有效，0表示无效（软删除）
+    yn = models.BooleanField(default=True, help_text="逻辑删除标志，1为有效，0为无效")
+
+    class Meta:
+        db_table = 'dbms_organizations'
+        verbose_name = '组织架构'
+        verbose_name_plural = '组织架构'
+
+    def __str__(self):
+        return f"{self.org_name} ({self.org_id})"
+
+    @classmethod
+    def parents(cls):
+        """
+        获取全量的父级菜单
+        """
+        return cls.objects.filter(parent_org_id__isnull=True)
+
+    @property
+    def children(self):
+        """ 获取当前菜单的全部子菜单 """
+        queryset = Organizations.objects.filter(parent_org_id=self.org_id).all()
+        return queryset if queryset else []
+
+    # def get_sub_children(self):
+    #     """
+    #     获取所有的子节点
+    #     """
+    #     children = self.children
+    #     sub_children = list(children)
+    #     if not sub_children:
+    #         return sub_children
+    #     for child in children:
+    #         sub_children.extend(child.get_sub_children())
+    #     return sub_children
+
+    def get_sub_children(self):
+        """
+        获取所有的子节点
+        """
+        # 用于记录已经访问过的节点，避免循环引用
+        visited = set()
+        sub_children = []
+
+        def _get_children(node):
+            nonlocal sub_children
+            if node.org_id in visited:
+                return
+            visited.add(node.org_id)
+            children = node.children
+            sub_children.extend(children)
+            for child in children:
+                _get_children(child)
+
+        _get_children(self)
+        return sub_children
+
+    def get_sub_children_v2(self):
+        """
+        获取所有的子节点
+        """
+        # 用于记录已经访问过的节点，避免循环引用
+        visited = set()
+        sub_children = []
+
+        def _get_children(node):
+            nonlocal sub_children
+            if node.org_id in visited:
+                return
+            visited.add(node.org_id)
+            # 使用 prefetch_related 一次性获取子节点
+            children = node.children.prefetch_related(Prefetch('children'))
+            sub_children.extend(children)
+            for child in children:
+                _get_children(child)
+
+        _get_children(self)
+        return sub_children
+
+    def get_full_org_name(self):
+        """
+        递归获取当前节点的全部父节点，并使用 - 连接它们的名称
+        """
+        names = [self.org_name]
+        parent = self.get_parent()
+        while parent:
+            names.insert(0, parent.org_name)
+            parent = parent.get_parent()
+        return "-".join(names)
+
+    def get_parent(self):
+        """
+        获取当前节点的父节点
+        """
+        if self.parent_org_id:
+            try:
+                return Organizations.objects.get(org_id=self.parent_org_id)
+            except Organizations.DoesNotExist:
+                return None
+        return None
+
+
+class Token(models.Model):
+    """
+    The default authorization token model.
+    """
+    # key = models.CharField(_("Key"), max_length=40, primary_key=True)
+    key = models.CharField(db_column="key", max_length=40, primary_key=True)
+    # user = models.OneToOneField(
+    #     settings.AUTH_USER_MODEL, related_name='username',
+    #     on_delete=models.CASCADE, verbose_name=_("User")
+    # )
+    user = models.CharField(db_column="user", max_length=50, help_text='userinfo.username')
+    # created = models.DateTimeField(_("Created"), auto_now_add=True)
+    created = models.DateTimeField(db_column="created", auto_now_add=True)
+
+    class Meta:
+        # Work around for a bug in Django:
+        # https://code.djangoproject.com/ticket/19422
+        #
+        # Also see corresponding ticket:
+        # https://github.com/encode/django-rest-framework/issues/705
+        # abstract = 'rest_framework.authtoken' not in settings.INSTALLED_APPS
+        verbose_name = _("Token")
+        verbose_name_plural = _("Tokens")
+        db_table = 'dbms_token'
+
+    def save(self, *args, **kwargs):
+        if not self.key:
+            self.key = self.generate_key()
+        return super().save(*args, **kwargs)
+
+    @classmethod
+    def generate_key(cls):
+        return binascii.hexlify(os.urandom(20)).decode()
+
+    def __str__(self):
+        return self.key
 
 
 class Role(BaseModel):
@@ -37,7 +230,7 @@ class Role(BaseModel):
 
 
 # TODO 规范数据库
-class UserInfo(BaseModel):
+class UserInfo(BaseModel, AbstractBaseUser):
     STATUS_DISABLE = 0
     STATUS_ENABLE = 1
 
@@ -54,7 +247,8 @@ class UserInfo(BaseModel):
     phone = models.CharField(max_length=50, null=True, default=None, help_text="联系电话")
     enable = models.IntegerField(choices=STATUS, default=STATUS_ENABLE, help_text="状态：1为在用，0为禁用")
     role = models.ForeignKey(to=Role, db_column='role_id', on_delete=models.CASCADE)
-    orgs = models.CharField(max_length=500, null=True, default=None, help_text="组织架构")
+    # orgs = models.CharField(max_length=500, null=True, default=None, help_text="组织架构")
+    orgs = models.OneToOneField(to=Organizations, db_column='orgs', to_field='org_id', on_delete=models.CASCADE)
     remark = models.CharField(max_length=2000, blank=True, null=True, default=None, help_text="备注")
     create_user = models.CharField(max_length=100, null=True, default="lipanpan65", help_text="创建人")
     update_user = models.CharField(max_length=100, null=True, default="lipanpan65", help_text="更新人")
@@ -204,13 +398,34 @@ class Menus(BaseModel):
         """
         获取所有的子节点
         """
-        children = self.children
-        sub_children = list(children)
-        if not sub_children:
-            return sub_children
-        for child in children:
-            sub_children.extend(child.get_sub_children())
+        # 用于记录已经访问过的节点，避免循环引用
+        visited = set()
+        sub_children = []
+
+        def _get_children(node):
+            nonlocal sub_children
+            if node.org_id in visited:
+                return
+            visited.add(node.org_id)
+            children = node.children
+            sub_children.extend(children)
+            for child in children:
+                _get_children(child)
+
+        _get_children(self)
         return sub_children
+
+    # def get_sub_children(self):
+    #     """
+    #     获取所有的子节点
+    #     """
+    #     children = self.children
+    #     sub_children = list(children)
+    #     if not sub_children:
+    #         return sub_children
+    #     for child in children:
+    #         sub_children.extend(child.get_sub_children())
+    #     return sub_children
 
     # class User2Role(models.Model):
 
@@ -262,6 +477,23 @@ CREATE TABLE `dbms_user2role` (
 """
 
 
+class OrganizationRelation(models.Model):
+    parent_org_id = models.ForeignKey(
+        Organizations,
+        on_delete=models.CASCADE,
+        related_name='child_relations'
+    )
+    org_id = models.ForeignKey(
+        Organizations,
+        on_delete=models.CASCADE,
+        related_name='parent_relations'
+    )
+
+    class Meta:
+        abstract = True
+        managed = False
+
+
 class GlobalDict(BaseModel):
     """
     全局字典表
@@ -279,84 +511,57 @@ class GlobalDict(BaseModel):
         db_table = 'dbms_global_dict'
 
 
+"""
 class Organizations(models.Model):
-    ORGANIZATION_TYPES = [
-        ('company', '公司'),
-        ('department', '部门'),
-        ('branch', '分公司'),
-        ('business_unit', '业务单元'),
-        ('team', '团队'),
-        ('project_team', '项目组'),
-        ('regional_office', '区域分部'),
-        ('functional_center', '职能中心'),
-        ('virtual_team', '虚拟组织'),
-    ]
-
-    # 自增主键，自动生成唯一ID
-    id = models.AutoField(primary_key=True, help_text="自增主键，唯一标识")
-    # 组织架构的唯一ID，字符类型，最大长度30
-    org_id = models.CharField(max_length=255, help_text="组织架构ID，用于唯一标识组织")
-    # 组织架构名称，字符类型，最大长度255
-    org_name = models.CharField(max_length=255, help_text="组织架构名称")
-    # 父组织ID，用于层级结构表示，可为空
-    parent_org_id = models.CharField(max_length=255, blank=True, null=True, help_text="父组织ID，顶级组织为空")
-    # 启用状态，默认1为启用，0为禁用
-    enable = models.IntegerField(default=1, help_text="启用状态，1表示启用，0表示禁用")
-    # 组织架构全称，字符类型，最大长度255
-    org_fullname = models.CharField(max_length=255, help_text="组织架构全名")
-    # 组织层级，表示组织在层级结构中的深度
-    org_level = models.IntegerField(default=1, help_text="组织层级，从顶层开始递增")
-    # 备注信息，用于描述组织的额外信息
-    remark = models.TextField(blank=True, null=True, help_text="备注信息，描述组织的附加说明")
-    # 记录创建时间，默认当前时间
-    create_time = models.DateTimeField(auto_now_add=True, help_text="创建时间")
-    # 记录更新时间，默认当前时间
-    update_time = models.DateTimeField(auto_now=True, help_text="更新时间")
-    # 组织类型，使用预定义的枚举值（如公司、部门、团队等）
-    org_type = models.CharField(
-        max_length=50,
-        choices=ORGANIZATION_TYPES,
-        help_text="组织类型，例如：公司、部门、团队等",
-        default='company'
-    )
-    # 组织的负责人ID，指向用户ID，可为空
-    manager_id = models.IntegerField(null=True, blank=True, help_text="组织负责人ID")
-
-    # 显示顺序，用于定义展示的排序，默认值为0
-    sort_order = models.IntegerField(default=0, help_text="显示顺序")
-
-    # 逻辑删除标志，1表示有效，0表示无效（软删除）
-    yn = models.BooleanField(default=True, help_text="逻辑删除标志，1为有效，0为无效")
-
-    class Meta:
-        db_table = 'dbms_organizations'
-        verbose_name = '组织架构'
-        verbose_name_plural = '组织架构'
-
-    def __str__(self):
-        return f"{self.org_name} ({self.org_id})"
+    # 原有字段保持不变...
 
     @classmethod
     def parents(cls):
-        """
-        获取全量的父级菜单
-        """
+
+        # 获取全量的父级菜单
         return cls.objects.filter(parent_org_id__isnull=True)
 
-    @property
-    def children(self):
-        """ 获取当前菜单的全部子菜单 """
-        queryset = Organizations.objects.filter(parent_org_id=self.org_id).all()
-        return queryset if queryset else []
+    # 将 @property 方法替换为反向关联字段
+    children = models.ManyToManyField(
+        'self',
+        related_name='parent_organizations',
+        symmetrical=False,
+        through_fields=('parent_org_id', 'org_id'),
+        through='OrganizationRelation'
+    )
 
     def get_sub_children(self):
-        """
-        获取所有的子节点
-        """
-        children = self.children
-        sub_children = list(children)
-        if not sub_children:
-            return sub_children
-        for child in children:
-            sub_children.extend(child.get_sub_children())
+        # 获取所有的子节点
+        # 用于记录已经访问过的节点，避免循环引用
+        visited = set()
+        sub_children = []
+
+        def _get_children(node):
+            nonlocal sub_children
+            if node.org_id in visited:
+                return
+            visited.add(node.org_id)
+            # 使用 prefetch_related 一次性获取子节点
+            children = node.children.prefetch_related('children')
+            sub_children.extend(children)
+            for child in children:
+                _get_children(child)
+
+        _get_children(self)
         return sub_children
+
+class OrganizationRelation(models.Model):
+    parent_org_id = models.ForeignKey(
+        Organizations,
+        on_delete=models.CASCADE,
+        related_name='child_relations'
+    )
+    org_id = models.ForeignKey(
+        Organizations,
+        on_delete=models.CASCADE,
+        related_name='parent_relations'
+    )
+    class Meta:
+        managed = False
+
+"""
