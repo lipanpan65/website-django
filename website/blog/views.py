@@ -8,6 +8,8 @@ from blog import serializers
 from components.pagination import TablePageNumberPagination, SizeTablePageNumberPagination
 from components.response import ResultEnum, ApiResult
 
+from rest_framework.permissions import IsAuthenticated, IsAuthenticated, AllowAny, IsAuthenticated
+
 logger = logging.getLogger()
 
 
@@ -16,6 +18,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.ArticleSerializer
     pagination_class = SizeTablePageNumberPagination
     filter_backends = (filters.SearchFilter, DjangoFilterBackend, filters.OrderingFilter)
+    permission_classes = (AllowAny, )
     # filter_fields = ('=title',)
     search_fields = ('title',)
     # filterset_fields = ('group', 'level', 'time_type', 'yn')

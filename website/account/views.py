@@ -8,7 +8,7 @@ from account import models
 from account import serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from account.models import GlobalDict
+from account.models import GlobalDict, Role
 from components.pagination import SizeTablePageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, status, filters
@@ -74,13 +74,32 @@ class UserInfoViewSet(viewsets.ModelViewSet):
     pagination_class = SizeTablePageNumberPagination
     permission_classes = [permissions.AllowAny]
 
+    filterset_fields = ('enable',)
+
     def create(self, request, *args, **kwargs):
         data = request.data
+        role_id = data.get('role_id')
+        if role_id:
+            try:
+                role = Role.objects.get(id=role_id)
+                request.data['role_name'] = role.role_name
+            except Role.DoesNotExist:
+                return ApiResult.failure()
+
+        # org_id = data.get('org_id')
+        # if org_id:
+        #     try:
+        #         org = models.Organizations.objects.get(org_id=org_id)
+        #         # request.data['org_fullname'] = org.org_fullname
+        #     except models.Organizations.DoesNotExist:
+        #         return ApiResult.failure()
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return super(UserInfoViewSet, self).create(request, *args, **kwargs)
+
     # def create(self, request, *args, **kwargs):
     #     serializer = self.get_serializer(data=request.data)
     #     serializer.is_valid(raise_exception=True)
@@ -88,24 +107,12 @@ class UserInfoViewSet(viewsets.ModelViewSet):
     #     headers = self.get_success_headers(serializer.data)
     #     return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    def login(self, request, *args, **kwargs):
-        """
-        登录
-        """
-        pass
-
-    def register(self, request, *args, **kwargs):
-        """
-        注册
-        """
-        pass
-
 
 class RoleViewSet(viewsets.ModelViewSet):
     queryset = models.Role.objects.all().order_by('-create_time')
     serializer_class = serializers.RoleSerializer
     pagination_class = SizeTablePageNumberPagination
-    filterset_fields = ('enable',)
+    filterset_fields = ('enable', 'role_type')
 
 
 class MenuViewSet(viewsets.ModelViewSet):
@@ -179,26 +186,55 @@ class OrganizationsViewSet(viewsets.ModelViewSet):
         """
         org_id = str(uuid.uuid4())  # 自定义 org_id
         parent_org_id = request.data.get('parent_org_id')
+        org_name = request.data.get('org_name')
+
         if parent_org_id is None:
-            org_fullname = request.data.get('org_name')
-            # return Response(status=status.HTTP_400_BAD_REQUEST)
+            # 如果没有父组织ID，说明是根组织，全称就是自身名称
+            org_fullname = org_name
         else:
-            request.data.update({"org_id": org_id, "parent_org_id": parent_org_id})
-            org_fullname = request.data.get('org_name')
+            try:
+                # 获取父组织实例
+                parent_org = models.Organizations.objects.get(org_id=parent_org_id)
+                # 生成组织架构全称
+                org_fullname = f"{parent_org.get_full_org_name()}-{org_name}"
+            except models.Organizations.DoesNotExist:
+                return Response({"error": "父组织不存在"}, status=status.HTTP_400_BAD_REQUEST)
 
         request.data.update({"org_id": org_id, "org_fullname": org_fullname})
         return super().create(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
-        # obj = self.get_object()
-        # print(obj)
-        request.data.update({"org_fullname": "org_fullname"})
-        return super().update(request, *args, **kwargs)
+        try:
+            instance = self.get_object()
+        except models.Organizations.DoesNotExist:
+            return ApiResult.failure()
+
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # 自动更新 org_fullname（仅当 org_name 或 parent_org_id 变化时）
+        if 'org_name' in serializer.validated_data or 'parent_org_id' in serializer.validated_data:
+            serializer.validated_data['org_fullname'] = instance.get_full_org_name()
+        # 保存并返回
+        serializer.save()
+        # return Response(serializer.data, status=status.HTTP_200_OK)
+        return ApiResult.success()
+        # return super().update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        children = instance.get_sub_children()
-        if children:
-            map(lambda child: child.delete(), children)
-            # children.delete()
-        return super().destroy(request, *args, **kwargs)
+        try:
+            instance = self.get_object()
+            children = instance.get_sub_children()
+            if children:
+                # 使用 for 循环删除每个子节点
+                for child in children:
+                    child.delete()
+            # 删除当前节点
+            self.perform_destroy(instance)
+            # return Response(status=status.HTTP_204_NO_CONTENT)
+            return ApiResult.success()
+        except Exception as e:
+            # 处理异常，返回错误信息
+            # return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return ApiResult.failure(detail=str(e))

@@ -33,9 +33,23 @@ class RoleSerializer(serializers.ModelSerializer):
 
 
 class UserInfoSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = models.UserInfo
         fields = '__all__'
+
+    def to_representation(self, instance):
+        ret = super(UserInfoSerializer, self).to_representation(instance)
+        # 检查 instance 是否有 org 属性
+        if hasattr(instance, 'org_id'):
+            org = instance.org_id
+            if org:
+                ret['org_fullname'] = org.get_full_org_name()
+        if hasattr(instance, 'role_id'):
+            role = instance.role_id
+            if role:
+                ret['role_name'] = role.role_name
+        return ret
 
 
 class MenusSerializer(serializers.ModelSerializer):
