@@ -66,6 +66,12 @@ class Organizations(models.Model):
     def __str__(self):
         return f"{self.org_name} ({self.org_id})"
 
+    def save(self, *args, **kwargs):
+        # 自动计算完整名称
+        self.org_fullname = self.get_full_org_name()
+        super().save(*args, **kwargs)
+
+
     @classmethod
     def parents(cls):
         """
@@ -229,7 +235,7 @@ class Role(BaseModel):
         db_table = "dbms_user_role"
 
 
-# TODO 规范数据库
+
 class UserInfo(BaseModel, AbstractBaseUser):
     STATUS_DISABLE = 0
     STATUS_ENABLE = 1
@@ -246,9 +252,10 @@ class UserInfo(BaseModel, AbstractBaseUser):
     email = models.CharField(max_length=50, null=True, default=None, help_text="邮箱")
     phone = models.CharField(max_length=50, null=True, default=None, help_text="联系电话")
     enable = models.IntegerField(choices=STATUS, default=STATUS_ENABLE, help_text="状态：1为在用，0为禁用")
-    role = models.ForeignKey(to=Role, db_column='role_id', on_delete=models.CASCADE)
-    # orgs = models.CharField(max_length=500, null=True, default=None, help_text="组织架构")
-    orgs = models.OneToOneField(to=Organizations, db_column='orgs', to_field='org_id', on_delete=models.CASCADE)
+    role_id = models.ForeignKey(to=Role, db_column='role_id', on_delete=models.CASCADE)
+    role_type = models.SmallIntegerField(choices=Role.ROLE_TYPE, default=1, null=True,
+                                         help_text="管理员类型：管理员、开发管理员")
+    org_id = models.ForeignKey(to=Organizations, db_column='org_id', to_field='org_id', on_delete=models.CASCADE)
     remark = models.CharField(max_length=2000, blank=True, null=True, default=None, help_text="备注")
     create_user = models.CharField(max_length=100, null=True, default="lipanpan65", help_text="创建人")
     update_user = models.CharField(max_length=100, null=True, default="lipanpan65", help_text="更新人")
