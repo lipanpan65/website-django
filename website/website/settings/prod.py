@@ -12,7 +12,7 @@ TEST_ENV = False
 DEV_ENV = False
 
 ###################################################
-# config env
+# config prod
 ###################################################
 ALLOWED_HOSTS = ["*"]
 WSGI_APPLICATION = 'website.wsgi.prod.application'
@@ -21,8 +21,8 @@ db_config = ConfigParser()
 db_config.read("/opt/conf/db.ini")
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.AllowAny',),  # 任何人
-    # 'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),  # 必须通过认证
+    # 'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.AllowAny',),  # 任何人
+    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),  # 必须通过认证
     # 'DEFAULT_PERMISSION_CLASSES': ('framework.permission.UserRolePermission',),
     # 从上向下执行走到如果校验成功则后面的不会校验
     'DEFAULT_AUTHENTICATION_CLASSES': (

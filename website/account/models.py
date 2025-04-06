@@ -71,7 +71,6 @@ class Organizations(models.Model):
         self.org_fullname = self.get_full_org_name()
         super().save(*args, **kwargs)
 
-
     @classmethod
     def parents(cls):
         """
@@ -163,44 +162,6 @@ class Organizations(models.Model):
         return None
 
 
-class Token(models.Model):
-    """
-    The default authorization token model.
-    """
-    # key = models.CharField(_("Key"), max_length=40, primary_key=True)
-    key = models.CharField(db_column="key", max_length=40, primary_key=True)
-    # user = models.OneToOneField(
-    #     settings.AUTH_USER_MODEL, related_name='username',
-    #     on_delete=models.CASCADE, verbose_name=_("User")
-    # )
-    user = models.CharField(db_column="user", max_length=50, help_text='userinfo.username')
-    # created = models.DateTimeField(_("Created"), auto_now_add=True)
-    created = models.DateTimeField(db_column="created", auto_now_add=True)
-
-    class Meta:
-        # Work around for a bug in Django:
-        # https://code.djangoproject.com/ticket/19422
-        #
-        # Also see corresponding ticket:
-        # https://github.com/encode/django-rest-framework/issues/705
-        # abstract = 'rest_framework.authtoken' not in settings.INSTALLED_APPS
-        verbose_name = _("Token")
-        verbose_name_plural = _("Tokens")
-        db_table = 'dbms_token'
-
-    def save(self, *args, **kwargs):
-        if not self.key:
-            self.key = self.generate_key()
-        return super().save(*args, **kwargs)
-
-    @classmethod
-    def generate_key(cls):
-        return binascii.hexlify(os.urandom(20)).decode()
-
-    def __str__(self):
-        return self.key
-
-
 class Role(BaseModel):
     STATUS_DISABLE = 0
     STATUS_ENABLE = 1
@@ -233,7 +194,6 @@ class Role(BaseModel):
     #                                related_name='role_user')
     class Meta:
         db_table = "dbms_user_role"
-
 
 
 class UserInfo(BaseModel, AbstractBaseUser):
@@ -437,12 +397,18 @@ class Menus(BaseModel):
     # class User2Role(models.Model):
 
 
-#     id = models.AutoField(primary_key=True, help_text="自增主键")
-#     user = models.ForeignKey(to=UserInfo, db_column='user_id', on_delete=models.CASCADE)
-#     role = models.ForeignKey(to=Role, db_column='role_id', on_delete=models.CASCADE)
-#
-#     class Meta:
-#         db_table = "dbms_user2role"
+class User2Role(models.Model):
+    id = models.AutoField(primary_key=True, help_text="自增主键")
+    user = models.ForeignKey(UserInfo, on_delete=models.CASCADE, db_column='user_id', verbose_name='用户ID')
+    role = models.ForeignKey(Role, on_delete=models.CASCADE, db_column='role_id', verbose_name='角色ID')
+
+    class Meta:
+        db_table = 'dbms_user2role'
+        verbose_name = '基础信息表-用户角色关联表'
+        unique_together = ('user', 'role')
+
+    def __str__(self):
+        return f"User {self.user_id} - Role {self.role_id}"
 
 
 # class UserGroup(models.Model):
@@ -468,20 +434,6 @@ class Menus(BaseModel):
 # exists, user = UserInfo.get_user(username=username)
 # if exists:
 #     User2Group.objects.create(user=user.first(), group=self)
-
-
-"""
-CREATE TABLE `dbms_user2role` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增主键',
-  `user_id` int(11) NOT NULL COMMENT '用户ID',
-  `user_name` 
-  `role_id` int(11) NOT NULL COMMENT '角色ID',
-  `role_name` 
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uniq_user_role` (`user_id`,`role_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='基础信息表-用户角色关联表';
-
-"""
 
 
 class OrganizationRelation(models.Model):
@@ -516,6 +468,30 @@ class GlobalDict(BaseModel):
 
     class Meta:
         db_table = 'dbms_global_dict'
+
+    @classmethod
+    def get(cls, item):
+        try:
+            obj = cls.objects.get(ckey=item)
+            return obj.cvalue
+        except cls.DoesNotExist:
+            return None
+
+    @classmethod
+    def __fetch(cls, type, key):
+        return cls.objects.filter(ctype=type, ckey=key, status=1).first()
+
+    @classmethod
+    def __array(cls, type, key):
+        return [v.strip() for v in cls.__fetch(type, key).cvalue.split(',')]
+
+    @classmethod
+    def __int(cls, type, key):
+        return int(cls.__fetch(type, key).cvalue)
+
+    @classmethod
+    def __bool(cls, type, key):
+        return bool(cls.__int(type, key))
 
 
 """
@@ -572,3 +548,26 @@ class OrganizationRelation(models.Model):
         managed = False
 
 """
+
+
+class Permission(BaseModel):
+    id = models.BigAutoField(primary_key=True)
+    permission_name = models.CharField(max_length=100, unique=True, verbose_name='权限名称')
+    permission_code = models.CharField(max_length=100, unique=True, verbose_name='权限代码（如 user:create）')
+    category = models.CharField(max_length=50, verbose_name='权限类别（如 user, order, product）')
+    enable = models.SmallIntegerField(default=1, help_text='状态：1:启用，0:禁用')
+    parent_permission = models.ForeignKey(to="self", db_column="parent_permission_id", on_delete=models.SET_NULL,
+                                          related_name='child_permissions', null=True, blank=True)
+    create_user = models.CharField(max_length=50, verbose_name='创建人用户名', null=True, default="lipanpan65", )
+    update_user = models.CharField(max_length=50, null=True, blank=True, verbose_name='更新人用户名',
+                                   default="lipanpan65", )
+    remark = models.CharField(max_length=255, null=True, blank=True, verbose_name='权限备注')
+    yn = models.BooleanField(default=True, verbose_name='是否有效（1=有效, 0=无效）')
+
+    class Meta:
+        db_table = 'dbms_permissions'
+        verbose_name = '权限'
+        verbose_name_plural = '权限'
+
+    def __str__(self):
+        return self.permission_name

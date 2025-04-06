@@ -107,3 +107,9 @@ class OrganizationTreeSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Organizations
         fields = '__all__'
+
+
+class PermissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Permission
+        fields = '__all__'

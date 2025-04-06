@@ -35,10 +35,11 @@ account_routers_v1.register(r'menus', account_views.MenuViewSet, basename='menus
 # #################### 管理端了路由配置 ####################### #
 operator_routers_v1 = DefaultRouter()
 operator_routers_v1.register(r'authentication', authentication_views.AuthenticationViewSet, 'authentication')
-operator_routers_v1.register(r'userinfo',account_views.UserInfoViewSet, 'userinfo')
+operator_routers_v1.register(r'userinfo', account_views.UserInfoViewSet, 'userinfo')
 operator_routers_v1.register(r'organizations', account_views.OrganizationsViewSet, 'organizations')
 operator_routers_v1.register(r'global', account_views.GlobalDictViewSet, 'global')
 operator_routers_v1.register(r'role', account_views.RoleViewSet, 'role')
+operator_routers_v1.register(r'permission', account_views.PermissionsViewSet, 'permission')
 
 urlpatterns = [
     # path('admin/', admin.site.urls),

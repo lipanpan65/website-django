@@ -38,3 +38,5 @@ class Article(BaseModel):
 
     class Meta:
         db_table = 'tb_blog_article'
+
+
