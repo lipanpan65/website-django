@@ -42,9 +42,6 @@ class GlobalDictViewSet(viewsets.ModelViewSet):
         })
         return super(GlobalDictViewSet, self).update(request, *args, **kwargs)
 
-    # def destroy(self, request, *args, **kwargs):
-    #     pass
-
     @action(methods=["GET"], detail=False)
     def validate_cname(self, request, *args, **kwargs):
         """
@@ -66,6 +63,16 @@ class GlobalDictViewSet(viewsets.ModelViewSet):
         exists = queryset.exists()
         data = dict(exists=exists, code=0)
         return Response(status=status.HTTP_200_OK, data=data)
+
+    @action(methods=["GET"], detail=False)
+    def value(self, request, **kwargs):
+        key = request.query_params.get('ckey')
+        value = models.GlobalDict.get(key)
+        import json
+        origin_value = value.strip().replace('\n', '')
+        json_data = json.loads(origin_value)
+        data = dict(key=key, value=json_data)
+        return ApiResult.success(data=data)
 
 
 class UserInfoViewSet(viewsets.ModelViewSet):
@@ -121,11 +128,6 @@ class MenuViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.MenusTreeSerializer
     pagination_class = SizeTablePageNumberPagination
 
-    # def get_queryset(self):
-    #     queryset = self.filter_queryset(self.queryset)
-    #     queryset = queryset.filter(pid__isnull=True)
-    #     return queryset
-
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         queryset = queryset.filter(pid__isnull=True)
@@ -138,34 +140,7 @@ class MenuViewSet(viewsets.ModelViewSet):
         children = instance.get_sub_children()
         if children:
             map(lambda child: child.delete(), children)
-            # children.delete()
         return super().destroy(request, *args, **kwargs)
-
-    # def list(self, request, *args, **kwargs):
-    #     data = []
-    #     queryset = self.filter_queryset(self.get_queryset())
-    #     parents = queryset.filter(pid__isnull=True)
-    #     # for parent in parents:
-    #     #     children_dict = []
-    #     #     children = parent.get_sub_children()
-    #     #     logger.info('children:%s' % children)
-    #     #     # parent_dict = parent.__dict__
-    #     #     # parent = {key: value for key, value in parent_dict.items() if not key.startswith('_')}
-    #     #     parent = parent.to_dict()
-    #     #     for child in children:
-    #     #         children_dict.append(child.to_dict())
-    #     #     parent.update(children=children_dict)
-    #     #     data.append(parent)
-    #
-    #     page = self.paginate_queryset(parents)
-    #     if page is not None:
-    #         serializer = self.get_serializer(page, many=True)
-    #         serializer = serializers.MenusTreeSerializer(page, many=True)
-    #         return self.get_paginated_response(serializer.data)
-    #         # return self.get_paginated_response(data)
-    #
-    #     serializer = self.get_serializer(data, many=True)
-    #     return ApiResult.success(data=serializer.data)
 
 
 class OrganizationsViewSet(viewsets.ModelViewSet):
@@ -218,9 +193,7 @@ class OrganizationsViewSet(viewsets.ModelViewSet):
             serializer.validated_data['org_fullname'] = instance.get_full_org_name()
         # 保存并返回
         serializer.save()
-        # return Response(serializer.data, status=status.HTTP_200_OK)
         return ApiResult.success()
-        # return super().update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
         try:
@@ -238,3 +211,10 @@ class OrganizationsViewSet(viewsets.ModelViewSet):
             # 处理异常，返回错误信息
             # return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             return ApiResult.failure(detail=str(e))
+
+
+class PermissionsViewSet(viewsets.ModelViewSet):
+    queryset = models.Permission.objects.all()
+    serializer_class = serializers.PermissionSerializer
+    pagination_class = SizeTablePageNumberPagination
+    filterset_fields = ('enable',)
