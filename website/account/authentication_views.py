@@ -51,7 +51,7 @@ class AuthenticationViewSet(viewsets.ModelViewSet):
                 origin_login(request, user)
             token, created = Token.objects.get_or_create(user=user)
 
-            role = user.role
+            role = user.role_id
             data = dict(username=user.username, name=user.name, role=role.role_type, token=token.key)
             response = ApiResult.success(data=data)
             response.set_cookie("token", token.key, max_age=SESSION_COOKIE_AGE)
