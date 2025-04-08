@@ -8,7 +8,6 @@ from django.contrib.auth.models import AbstractUser, AbstractBaseUser
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 
-
 class Organizations(models.Model):
     ORGANIZATION_TYPES = [
         ('company', '公司'),
@@ -84,18 +83,6 @@ class Organizations(models.Model):
         queryset = Organizations.objects.filter(parent_org_id=self.org_id).all()
         return queryset if queryset else []
 
-    # def get_sub_children(self):
-    #     """
-    #     获取所有的子节点
-    #     """
-    #     children = self.children
-    #     sub_children = list(children)
-    #     if not sub_children:
-    #         return sub_children
-    #     for child in children:
-    #         sub_children.extend(child.get_sub_children())
-    #     return sub_children
-
     def get_sub_children(self):
         """
         获取所有的子节点
@@ -161,7 +148,6 @@ class Organizations(models.Model):
                 return None
         return None
 
-
 class Role(BaseModel):
     STATUS_DISABLE = 0
     STATUS_ENABLE = 1
@@ -194,7 +180,6 @@ class Role(BaseModel):
     #                                related_name='role_user')
     class Meta:
         db_table = "dbms_user_role"
-
 
 class UserInfo(BaseModel, AbstractBaseUser):
     STATUS_DISABLE = 0
@@ -556,8 +541,11 @@ class Permission(BaseModel):
     permission_code = models.CharField(max_length=100, unique=True, verbose_name='权限代码（如 user:create）')
     category = models.CharField(max_length=50, verbose_name='权限类别（如 user, order, product）')
     enable = models.SmallIntegerField(default=1, help_text='状态：1:启用，0:禁用')
-    parent_permission = models.ForeignKey(to="self", db_column="parent_permission_id", on_delete=models.SET_NULL,
-                                          related_name='child_permissions', null=True, blank=True)
+    parent_permission = models.ForeignKey(to="self", on_delete=models.SET_NULL, related_name='child_permissions',
+                                          null=True, blank=True)
+
+    # parent_permission = models.ForeignKey(to="self", on_delete=models.SET_NULL, related_name='child_permissions',
+    #                                       null=True, blank=True)
     create_user = models.CharField(max_length=50, verbose_name='创建人用户名', null=True, default="lipanpan65", )
     update_user = models.CharField(max_length=50, null=True, blank=True, verbose_name='更新人用户名',
                                    default="lipanpan65", )
@@ -569,5 +557,36 @@ class Permission(BaseModel):
         verbose_name = '权限'
         verbose_name_plural = '权限'
 
-    def __str__(self):
-        return self.permission_name
+    @classmethod
+    def parents(cls):
+        """
+        获取全量的父级菜单
+        """
+        return cls.objects.filter(parent_permission_id__isnull=True)
+
+    @property
+    def children(self):
+        """ 获取当前菜单的全部子菜单 """
+        queryset = Permission.objects.filter(parent_permission=self.id).all()
+        return queryset if queryset else []
+
+    def get_sub_children(self):
+        """
+        获取所有的子节点
+        """
+        # 用于记录已经访问过的节点，避免循环引用
+        visited = set()
+        sub_children = []
+
+        def _get_children(node):
+            nonlocal sub_children
+            if node.id in visited:
+                return
+            visited.add(node.id)
+            children = node.children
+            sub_children.extend(children)
+            for child in children:
+                _get_children(child)
+
+        _get_children(self)
+        return sub_children
