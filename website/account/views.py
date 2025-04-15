@@ -121,6 +121,19 @@ class RoleViewSet(viewsets.ModelViewSet):
     pagination_class = SizeTablePageNumberPagination
     filterset_fields = ('enable', 'role_type')
 
+    @action(methods=["POST"], detail=True)
+    def grant(self, request, *args, **kwargs):
+        instance = self.get_object()
+        print(instance)
+        role_id = request.data.get('role_id')
+        permission = request.data.get('permissions')
+        if isinstance(permission, list):
+            print(permission)
+            permission = models.Permission.objects.filter(id__in=permission)
+        instance.permissions.set(permission)
+
+        return ApiResult.success()
+
 
 class MenuViewSet(viewsets.ModelViewSet):
     queryset = models.Menus.objects.all().order_by('-create_time')
@@ -234,8 +247,3 @@ class PermissionsViewSet(viewsets.ModelViewSet):
         page = self.paginate_queryset(queryset)
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
-
-
-
-
-
