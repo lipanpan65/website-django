@@ -33,7 +33,6 @@ class RoleSerializer(serializers.ModelSerializer):
 
 
 class UserInfoSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = models.UserInfo
         fields = '__all__'
@@ -110,6 +109,27 @@ class OrganizationTreeSerializer(serializers.ModelSerializer):
 
 
 class PermissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Permission
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        ret = super(PermissionSerializer, self).to_representation(instance)
+        children = instance.children
+        if children:
+            ret["children"] = PermissionSerializer(children, many=True).data
+        return ret
+
+
+class PermissionTreeSerializer(serializers.ModelSerializer):
+    children = serializers.SerializerMethodField()
+
+    def get_children(self, instance):
+        children = instance.children
+        if children:
+            serializer = PermissionSerializer(children, many=True)
+            return serializer.data
+
     class Meta:
         model = models.Permission
         fields = '__all__'

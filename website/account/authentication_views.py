@@ -61,7 +61,6 @@ class AuthenticationViewSet(viewsets.ModelViewSet):
                 'username': user.username,
                 'role': user.role_type,
             }), max_age=SESSION_COOKIE_AGE)
-            # response.set_cookie("curRole", role.role_type, max_age=SESSION_COOKIE_AGE)
             return response
         else:
             response = ApiResult.failure(message="用户登陆失败")

@@ -121,6 +121,19 @@ class RoleViewSet(viewsets.ModelViewSet):
     pagination_class = SizeTablePageNumberPagination
     filterset_fields = ('enable', 'role_type')
 
+    @action(methods=["POST"], detail=True)
+    def grant(self, request, *args, **kwargs):
+        instance = self.get_object()
+        print(instance)
+        role_id = request.data.get('role_id')
+        permission = request.data.get('permissions')
+        if isinstance(permission, list):
+            print(permission)
+            permission = models.Permission.objects.filter(id__in=permission)
+        instance.permissions.set(permission)
+
+        return ApiResult.success()
+
 
 class MenuViewSet(viewsets.ModelViewSet):
     queryset = models.Menus.objects.all().order_by('-create_time')
@@ -196,6 +209,7 @@ class OrganizationsViewSet(viewsets.ModelViewSet):
         return ApiResult.success()
 
     def destroy(self, request, *args, **kwargs):
+        # TODO 增加事务
         try:
             instance = self.get_object()
             children = instance.get_sub_children()
@@ -205,7 +219,6 @@ class OrganizationsViewSet(viewsets.ModelViewSet):
                     child.delete()
             # 删除当前节点
             self.perform_destroy(instance)
-            # return Response(status=status.HTTP_204_NO_CONTENT)
             return ApiResult.success()
         except Exception as e:
             # 处理异常，返回错误信息
@@ -215,6 +228,22 @@ class OrganizationsViewSet(viewsets.ModelViewSet):
 
 class PermissionsViewSet(viewsets.ModelViewSet):
     queryset = models.Permission.objects.all()
-    serializer_class = serializers.PermissionSerializer
+    serializer_class = serializers.PermissionTreeSerializer
     pagination_class = SizeTablePageNumberPagination
     filterset_fields = ('enable',)
+
+    def create(self, request, *args, **kwargs):
+        parent_permission_id = request.data.get('parent_permission_id')
+        if parent_permission_id is not None:
+            permission = models.Permission.objects.get(id=parent_permission_id)
+            request.data['parent_permission'] = permission.id
+
+        # return super(PermissionsViewSet, self).create(request, *args, **kwargs) # Python2 的方式
+        return super().create(request, *args, **kwargs)  # Python3 的方式
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        queryset = queryset.filter(parent_permission__isnull=True)
+        page = self.paginate_queryset(queryset)
+        serializer = self.get_serializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
