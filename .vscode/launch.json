@@ -1,0 +1,41 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Django Debug",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/website/manage.py",
+            "args": [
+                "runserver",
+                "127.0.0.1:9798",
+                "--settings=website.settings.dev",
+                "--noreload"
+            ],
+            "django": true,
+            "python": "${workspaceFolder}/venv/bin/python",
+            "cwd": "${workspaceFolder}/website",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/website"
+            }
+        },
+        {
+            "name": "Django Test Debug",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/website/manage.py",
+            "args": [
+                "test",
+                "--settings=website.settings.dev",
+                "--verbosity=2"
+            ],
+            "django": true,
+            "python": "${workspaceFolder}/venv/bin/python",
+            "cwd": "${workspaceFolder}/website",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        }
+    ]
+}

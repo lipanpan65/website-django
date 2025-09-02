@@ -1,0 +1,6 @@
+[default]
+database = website_db
+user = website_user
+password = website_password
+host = localhost
+port = 3306

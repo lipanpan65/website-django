@@ -41,7 +41,7 @@ CREATE TABLE `dbms_user_role` (
   `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `remark` varchar(255) DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='基础信息表-用户角色表'
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='基础信息表-用户角色表';
 
 -- 任务表
  CREATE TABLE `dbms_celery_task_main` (
@@ -67,14 +67,4 @@ CREATE TABLE `dbms_user2group` (
   `user_id` bigint(10) unsigned NOT NULL COMMENT '用户主键ID',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_group_id_user_id` (`group_id`,`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8 COMMENT='基础信息表-用户和用户组关系表'
-
-
-
-
-
-
-
-
-
-
+) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8 COMMENT='基础信息表-用户和用户组关系表';
