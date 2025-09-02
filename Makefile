@@ -1,6 +1,6 @@
 # Makefile for Django Local Development Environment
 
-.PHONY: help dev check-db
+.PHONY: help dev check-db check-network docker-dev docker-build docker-stop docker-clean
 
 # 默认目标
 help:
@@ -9,6 +9,13 @@ help:
 	@echo "可用命令:"
 	@echo "  make dev           - 启动本地开发环境"
 	@echo "  make check-db      - 检查数据库连接"
+	@echo ""
+	@echo "Docker 相关命令:"
+	@echo "  make check-network - 检查/创建Docker网络"
+	@echo "  make docker-build  - 构建Docker开发镜像"
+	@echo "  make docker-dev    - 启动Docker开发环境"
+	@echo "  make docker-stop   - 停止Docker开发环境"
+	@echo "  make docker-clean  - 清理Docker开发环境"
 
 # 检查数据库连接
 check-db:
@@ -73,3 +80,32 @@ dev: check-db
 	@venv/bin/pip install -q -r website/requirements.txt
 	@echo "🌐 启动开发服务器在端口9798..."
 	@cd website && ../venv/bin/python manage.py runserver 127.0.0.1:9798 --settings=website.settings.dev
+
+# 检查/创建Docker网络
+check-network:
+	@echo "🌐 检查Docker网络 website-dev-network..."
+	@if ! docker network ls | grep -q "website-dev-network"; then \
+		echo "📡 创建Docker网络 website-dev-network..."; \
+		docker network create website-dev-network --driver bridge; \
+		echo "✅ Docker网络创建成功"; \
+	else \
+		echo "✅ Docker网络 website-dev-network 已存在"; \
+	fi
+
+# Docker开发环境相关命令
+docker-build:
+	@echo "🐳 构建Docker开发镜像..."
+	@docker-compose -f docker-compose.dev.yml build
+
+docker-dev: check-network
+	@echo "🐳 启动Docker开发环境..."
+	@echo "🌐 服务将在 http://localhost:9798 启动"
+	@docker-compose -f docker-compose.dev.yml up
+
+docker-stop:
+	@echo "🛑 停止Docker开发环境..."
+	@docker-compose -f docker-compose.dev.yml down
+
+docker-clean:
+	@echo "🧹 清理Docker开发环境（停止并删除容器、网络、镜像）..."
+	@docker-compose -f docker-compose.dev.yml down --rmi all --volumes --remove-orphans
