@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  website-django:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - /app/website/db
+    environment:
+      - DJANGO_SETTINGS_MODULE=website.settings.dev
+      - DEBUG=True
+    networks:
+      - website-network
+    depends_on:
+      - db
+
+  # MySQL数据库
+  db:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=website_db
+      - MYSQL_USER=website_user
+      - MYSQL_PASSWORD=website_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - website-network
+
+networks:
+  website-network:
+    driver: bridge
+
+volumes:
+  mysql_data:

@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  website-django-dev:
+    container_name: website-django-dev
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "9798:9798"
+    volumes:
+      - .:/app
+      - /app/website/db
+    environment:
+      - DJANGO_SETTINGS_MODULE=website.settings.dev
+      - DEBUG=True
+      - PYTHONPATH=/app
+    networks:
+      - website-dev-network
+    # depends_on:
+    #   - db-dev
+    command: >
+      sh -c "python website/manage.py runserver 0.0.0.0:9798 --settings=website.settings.dev"
+
+  # # MySQL数据库
+  # db-dev:
+  #   image: mysql:8.0
+  #   ports:
+  #     - "3306:3306"
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=rootpassword
+  #     - MYSQL_DATABASE=website_db
+  #     - MYSQL_USER=website_user
+  #     - MYSQL_PASSWORD=website_password
+  #   volumes:
+  #     - mysql_dev_data:/var/lib/mysql
+  #     - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+  #   networks:
+  #     - website-dev-network
+
+networks:
+  website-dev-network:
+    external: true
+    name: website-dev-network
+
+volumes:
+  mysql_dev_data:
+

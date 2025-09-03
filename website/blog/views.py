@@ -8,7 +8,7 @@ from blog import serializers
 from components.pagination import TablePageNumberPagination, SizeTablePageNumberPagination
 from components.response import ResultEnum, ApiResult
 
-from rest_framework.permissions import IsAuthenticated, IsAuthenticated, AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 logger = logging.getLogger()
 
@@ -29,9 +29,15 @@ class ArticleViewSet(viewsets.ModelViewSet):
     #     # self.queryset.update_or_create()
     #     return super(ArticleViewSet, self).create(request, *args, **kwargs)
 
-    # def list(self, request, *args, **kwargs):
-    #     # raise BizException(ResultEnum.FAILURE)
-    #     raise ValueError('this is test')
+    def list(self, request, *args, **kwargs):
+        # 在这一行打断点，可以调试请求信息
+        logger.debug(f"ArticleViewSet.list called: {request.method} {request.path}")
+        logger.debug(f"Query params: {dict(request.query_params)}")
+        
+        # 这里也是一个好的断点位置
+        result = super().list(request, *args, **kwargs)
+        
+        return result
     #     return super(ArticleViewSet, self).list(request)
 
     @action(methods=['POST'], detail=True)

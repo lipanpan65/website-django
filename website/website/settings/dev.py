@@ -9,7 +9,7 @@ from .common import *
 from configparser import ConfigParser
 
 db_config = ConfigParser()
-db_config.read("/Users/lipanpan/github/website-django/website/website/settings/db.ini")
+db_config.read(os.path.join(os.path.dirname(__file__), "db.ini"))
 
 log_path = os.path.join(BASE_DIR, 'logs')
 
