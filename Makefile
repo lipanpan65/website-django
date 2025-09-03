@@ -1,6 +1,6 @@
 # Makefile for Django Local Development Environment
 
-.PHONY: help dev check-db check-network docker-dev docker-build docker-stop docker-clean
+.PHONY: help dev check-db check-network docker-dev docker-build docker-debug docker-stop docker-clean
 
 # 默认目标
 help:
@@ -14,6 +14,7 @@ help:
 	@echo "  make check-network - 检查/创建Docker网络"
 	@echo "  make docker-build  - 构建Docker开发镜像"
 	@echo "  make docker-dev    - 启动Docker开发环境"
+	@echo "  make docker-debug  - 启动Docker调试环境"
 	@echo "  make docker-stop   - 停止Docker开发环境"
 	@echo "  make docker-clean  - 清理Docker开发环境"
 
@@ -101,6 +102,13 @@ docker-dev: check-network
 	@echo "🐳 启动Docker开发环境..."
 	@echo "🌐 服务将在 http://localhost:9798 启动"
 	@docker-compose -f docker-compose.dev.yml up
+
+docker-debug: check-network
+	@echo "🐛 启动Docker调试环境..."
+	@echo "🌐 服务将在 http://localhost:9798 启动"
+	@echo "🔍 调试端口: 5678 (等待调试器连接)"
+	@echo "📝 请在 Cursor 中连接远程调试器"
+	@docker-compose -f docker-compose.debug.yml up
 
 docker-stop:
 	@echo "🛑 停止Docker开发环境..."

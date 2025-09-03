@@ -2,12 +2,13 @@ version: '3.8'
 
 services:
   website-django-debug:
+    container_name: website-django-debug
     build:
       context: .
       dockerfile: Dockerfile.dev
     ports:
-      - "8000:8000"
-      - "5678:5678"  # 调试端口
+      - "9798:9798"  # Django 开发服务器端口
+      - "5678:5678"   # debugpy 调试端口
     volumes:
       - .:/app
       - /app/website/db
@@ -18,31 +19,33 @@ services:
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
     networks:
-      - website-debug-network
-    depends_on:
-      - db-debug
+      - website-dev-network
+    # depends_on:
+    #   - db-debug
     command: >
-      sh -c "python -m debugpy --listen 0.0.0.0:5678 --wait-for-client website/manage.py runserver 0.0.0.0:8000"
+      sh -c "python -m debugpy --listen 0.0.0.0:5678 --wait-for-client website/manage.py runserver 0.0.0.0:9798 --settings=website.settings.dev"
 
-  # MySQL数据库
-  db-debug:
-    image: mysql:8.0
-    ports:
-      - "3307:3306"
-    environment:
-      - MYSQL_ROOT_PASSWORD=rootpassword
-      - MYSQL_DATABASE=website_db
-      - MYSQL_USER=website_user
-      - MYSQL_PASSWORD=website_password
-    volumes:
-      - mysql_debug_data:/var/lib/mysql
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
-    networks:
-      - website-debug-network
+  # # MySQL数据库 - 调试环境
+  # db-debug:
+  #   image: mysql:8.0
+  #   container_name: website-django-db-debug
+  #   ports:
+  #     - "3307:3306"  # 使用不同端口避免与开发环境冲突
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=rootpassword
+  #     - MYSQL_DATABASE=website_db
+  #     - MYSQL_USER=website_user
+  #     - MYSQL_PASSWORD=website_password
+  #   volumes:
+  #     - mysql_debug_data:/var/lib/mysql
+  #     - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+  #   networks:
+  #     - website-dev-network
 
 networks:
-  website-debug-network:
-    driver: bridge
+  website-dev-network:
+    external: true
+    name: website-dev-network
 
 volumes:
   mysql_debug_data:

@@ -204,11 +204,122 @@ pip install -r requirements.txt
 python manage.py runserver --settings=website.settings.dev
 ```
 
-## 基于 docker 创建虚拟环境
+## 基于 Docker 的开发环境
+
+### Docker 开发环境
+
 ```bash
 # 构建开发镜像
-docker-compose -f docker-compose.dev.yml build
+make docker-build
 
 # 启动开发环境
-docker-compose -f docker-compose.dev.yml up
+make docker-dev
 ```
+
+### Docker 调试环境
+
+项目支持在 Docker 容器中进行远程调试，特别适合需要与生产环境保持一致的调试场景。
+
+#### 1. 启动调试环境
+
+```bash
+# 启动 Docker 调试环境
+make docker-debug
+```
+
+这会：
+- 自动检查并创建 Docker 网络
+- 启动带有 debugpy 的 Django 容器
+- 在端口 5678 等待调试器连接
+- Django 服务运行在端口 9798
+
+#### 2. 在 Cursor 中连接调试器
+
+**前提条件：**
+- 确保已正确配置 `website.code-workspace` 工作区
+- 调试配置已包含在工作区文件中
+
+**调试步骤：**
+
+1. **设置断点**
+   - 在 Django 代码中点击行号左侧设置红色断点
+
+2. **连接调试器**
+   - 按 `F5` 或点击左侧活动栏的"运行和调试"图标
+   - 选择 "🐳 Django Docker Debug" 配置
+   - 点击绿色播放按钮开始连接
+
+3. **触发调试**
+   - 连接成功后，访问 `http://localhost:9798`
+   - 代码会在断点处暂停
+   - 使用 F10（单步跳过）、F11（单步进入）、F5（继续）进行调试
+
+#### 3. 调试配置说明
+
+工作区调试配置位于 `website.code-workspace` 文件中：
+
+```json
+{
+  "name": "🐳 Django Docker Debug",
+  "type": "python",
+  "request": "attach",
+  "connect": {
+    "host": "localhost",
+    "port": 5678
+  },
+  "pathMappings": [
+    {
+      "localRoot": "${workspaceFolder:🐍 Django 后端}",
+      "remoteRoot": "/app"
+    }
+  ],
+  "django": true,
+  "justMyCode": false
+}
+```
+
+#### 4. 调试方式对比
+
+| 调试方式 | 适用场景 | 优势 | 启动命令 |
+|---------|---------|------|----------|
+| **🐍 Django Debug** | 日常开发调试 | 启动快速，环境简单 | `make dev` |
+| **🐳 Django Docker Debug** | 生产环境问题调试 | 环境一致性，容器化 | `make docker-debug` |
+
+#### 5. Docker 调试相关命令
+
+```bash
+# 查看所有可用命令
+make help
+
+# Docker 相关命令
+make check-network     # 检查/创建Docker网络
+make docker-build      # 构建Docker开发镜像
+make docker-dev        # 启动Docker开发环境
+make docker-debug      # 启动Docker调试环境
+make docker-stop       # 停止Docker开发环境
+make docker-clean      # 清理Docker开发环境
+```
+
+#### 6. 调试故障排除
+
+**问题：调试器无法连接**
+- 确保 `make docker-debug` 正在运行
+- 检查端口 5678 是否被占用：`lsof -i :5678`
+- 确认容器状态：`docker ps | grep django-debug`
+
+**问题：断点不生效**
+- 确保路径映射正确（本地路径 ↔ 容器路径）
+- 检查是否在正确的文件中设置断点
+- 重启调试会话
+
+**问题：容器启动失败**
+- 检查 Docker 网络：`make check-network`
+- 查看容器日志：`docker logs website-django-debug`
+- 清理并重新构建：`make docker-clean && make docker-build`
+
+#### 7. 调试最佳实践
+
+1. **代码修改实时生效**：通过 volume 挂载，在宿主机修改代码会立即反映到容器中
+2. **断点策略**：在关键业务逻辑、API 入口点设置断点
+3. **变量检查**：利用调试器查看请求数据、数据库查询结果等
+4. **日志结合**：调试期间结合 `make docker-logs` 查看完整日志
